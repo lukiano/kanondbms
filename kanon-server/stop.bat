@@ -1,0 +1,1 @@
+java -cp kanon-server.jar;zql.jar servidor.StopServer
