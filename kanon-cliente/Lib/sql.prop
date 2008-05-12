@@ -1,0 +1,21 @@
+info=Sql
+token_keywords1=CREATE:TABLE:DROP:INSERT:INTO:VALUES:SET:DELETE:FROM:WHERE:UPDATE:SELECT:AND:OR:LIKE:IN:CRASH:CHECKPOINT
+token_keywords2=CHAR:NUMERIC
+token_keywords3=TABLAS:PAGINAS:COLUMNAS:READ_UNCOMMITTED:READ_COMMITTED:REPETEABLE_READ:SERIALIZABLE
+token_keywords4=BEGIN:TRANSACTION:COMMIT:ROLLBACK:SAVEPOINT:ISOLATION
+token_litteral1=[';']
+token_op=(:):+:-:/:*:,:=:<:>
+token_number1=_NUMBER_
+color_keywords1=0:0:255
+color_keywords2=0:160:0
+color_keywords3=160:160:0
+color_keywords4=255:0:0
+color_litteral1=0:160:160
+color_number1=255:0:255
+color_op=128:128:128
+ignoreCase=true
+tokenMatchIni=\ \t([;=+-*/<>.,
+tokenMatchEnd=\ \t)];=+-*/<>.,
+ignoreTokenMatch_op=true
+ignoreTokenMatch_litteral1=true
+ignoreTokenMatch_keywords1=true
