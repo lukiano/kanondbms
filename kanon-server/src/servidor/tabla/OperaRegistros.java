@@ -22,6 +22,13 @@ public interface OperaRegistros {
     Iterador<Registro.ID> registros();
 
     /**
+     * Método para recorrer todos los registros a partir de uno determinado.
+     * @return un iterador con registros.
+     */
+    
+    Iterador<Registro.ID> registrosDesde(Registro.ID idRegistro);
+    
+    /**
      * Método para obtener un registro determinado.
      * @param idRegistro el Id del registro requerido.
      * @return el registro que concuerda con el Id pasado por parámetro.

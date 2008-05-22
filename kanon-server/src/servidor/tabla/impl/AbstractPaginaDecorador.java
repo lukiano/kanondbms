@@ -131,4 +131,11 @@ public abstract class AbstractPaginaDecorador implements Pagina {
 		return this.paginaDecorada.registros();
 	}
 
+	/**
+	 * @see servidor.tabla.OperaRegistros#registrosDesde(servidor.tabla.Registro.ID)
+	 */
+	public Iterador<servidor.tabla.Registro.ID> registrosDesde(servidor.tabla.Registro.ID idRegistro) {
+		return this.paginaDecorada.registrosDesde(idRegistro);
+	}
+
 }

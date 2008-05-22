@@ -26,6 +26,37 @@ import servidor.util.Iterador;
  */
 public class PaginaImpl implements Pagina {
 
+private final class RegistroIterador implements Iterador<Registro.ID> {
+		private int contador = 0;
+
+		public RegistroIterador(int inicio) {
+			this.contador = inicio;
+		}
+		
+		public void cerrar() {
+			// no hace nada
+		}
+
+		public Registro.ID proximo() {
+			if (this.contador >= PaginaImpl.this.libres.tamanio()) {
+				throw new NoSuchElementException("Ya no quedan elementos.");
+			}
+			Registro.ID idRegistro = Registro.ID.nuevoID(PaginaImpl.this.id(), this.contador);
+			this.contador++;
+			return idRegistro;
+		}
+
+		public boolean hayProximo() {
+			while (this.contador < PaginaImpl.this.libres.tamanio()) {
+				if (PaginaImpl.this.libres.marcado(this.contador)) {
+					return true;
+				}
+				this.contador++;
+			}
+			return false;
+		}
+	}
+
 //	 esta implementacion no debe contener ninguna variable de estado.
 	
 	/**
@@ -116,34 +147,14 @@ public class PaginaImpl implements Pagina {
      * esta seria devuelta en el iterador). Tomar en cuenta el aislamiento
      */     
     public Iterador<Registro.ID> registros() {
-        return new Iterador<Registro.ID>() {
-        	
-        	private int contador = 0;
-		
-			public void cerrar() {
-				// no hace nada
-			}
-		
-			public Registro.ID proximo() {
-				if (this.contador >= PaginaImpl.this.libres.tamanio()) {
-					throw new NoSuchElementException("Ya no quedan elementos.");
-				}
-				Registro.ID idRegistro = Registro.ID.nuevoID(PaginaImpl.this.id(), this.contador);
-				this.contador++;
-				return idRegistro;
-			}
-		
-			public boolean hayProximo() {
-				while (this.contador < PaginaImpl.this.libres.tamanio()) {
-					if (PaginaImpl.this.libres.marcado(this.contador)) {
-						return true;
-					}
-					this.contador++;
-				}
-				return false;
-			}
-		
-		};
+        return new RegistroIterador(0);
+    }
+
+    /**
+     * @see servidor.tabla.OperaRegistros#registrosDesde(servidor.tabla.Registro.ID)
+     */
+    public Iterador<Registro.ID> registrosDesde(Registro.ID idRegistro) {
+        return new RegistroIterador(idRegistro.numeroRegistro());
     }
 
     /**

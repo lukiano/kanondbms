@@ -83,7 +83,15 @@ class TablaImpl implements Tabla {
 	public Iterador<Registro.ID> registros() {
 		return new IteradorTabla(0);
 	}
-	
+
+	/**
+	 * @see servidor.tabla.OperaRegistros#registrosDesde(servidor.tabla.Registro.ID)
+	 */
+	public Iterador<Registro.ID> registrosDesde(servidor.tabla.Registro.ID idRegistro) {
+		this.chequearIdRegistro(idRegistro);
+		return new IteradorTabla(idRegistro);
+	}
+
 	/**
 	 * @see servidor.tabla.OperaRegistros#registro(servidor.tabla.Registro.ID)
 	 */
@@ -270,6 +278,20 @@ class TablaImpl implements Tabla {
 			} else {
 				this.paginaActual = idPagina;
 				this.iteradorActual = pagina.registros();
+			}
+		}
+
+		public IteradorTabla(Registro.ID primerRegistro) {
+			this.nroPagina = primerRegistro.propietario().numeroPagina();
+			Pagina.ID idPagina = Pagina.ID.nuevoID(TablaImpl.this.idTabla, this.nroPagina);
+			Bloque bloque = TablaImpl.this.bufferManager.dameBloque(idPagina);
+			Pagina pagina = FabricaPagina.damePagina(TablaImpl.this.bufferManager, TablaImpl.this.columnas(), idPagina, bloque);
+			if (pagina == null) {
+				this.iteradorActual = IteradorVacio.dameIteradorVacio();
+				this.fin = true;
+			} else {
+				this.paginaActual = idPagina;
+				this.iteradorActual = pagina.registrosDesde(primerRegistro);
 			}
 		}
 

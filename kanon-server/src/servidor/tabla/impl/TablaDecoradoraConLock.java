@@ -24,6 +24,84 @@ import servidor.util.Iterador;
  */
 final class TablaDecoradoraConLock extends AbstractTablaDecorador {
 
+	private final class LockIteradorDecorador extends
+			AbstractIteradorDecorador<Registro.ID> {
+		private Registro.ID idActual;
+		private boolean consumido = true;
+
+		private LockIteradorDecorador(Iterador<Registro.ID> iterador) {
+			super(iterador);
+		}
+
+		/**
+		 * @see servidor.util.AbstractIteradorDecorador#hayProximo()
+		 */
+		@Override
+		public boolean hayProximo() {
+		    if (!this.consumido) {
+		        //no pasar al siguiente hasta que no se consuma el actual
+		        return true;
+		    }
+		    if (this.idActual != null) {
+		    	TablaDecoradoraConLock.super.liberarRegistro(idActual);
+		    	if (TablaDecoradoraConLock.this.esAislamientoReadCommitted()) {
+		    		if (TablaDecoradoraConLock.this.lockManager.estaBloqueado(this.idActual, false)) {
+		    			TablaDecoradoraConLock.this.lockManager.desbloquear(this.idActual);
+		    		}
+		    	}
+		    }
+		    while (super.hayProximo()) {
+		        this.idActual = super.proximo();
+		        if (TablaDecoradoraConLock.this.esMasQueAislamientoReadUnCommitted()) {
+		        	TablaDecoradoraConLock.this.lockManager.bloquear(this.idActual, false);
+		        }
+		        Registro registro = TablaDecoradoraConLock.super.registro(this.idActual); 
+		        if (registro != null && registro.esValido()) {
+		            this.consumido = false;
+		            return true;
+		        }
+		        TablaDecoradoraConLock.this.lockManager.desbloquear(this.idActual);
+		    }
+		    this.idActual = null;
+		    return false;
+		}
+
+		/**
+		 * @see servidor.util.AbstractIteradorDecorador#proximo()
+		 */
+		@Override
+		public Registro.ID proximo() {
+		    if (this.consumido) {
+		        if (this.hayProximo()) {
+		            this.consumido = true;
+		            return this.idActual;
+		        }
+		        throw new NoSuchElementException("Ya no quedan elementos.");
+		    }
+		    this.consumido = true;
+		    return this.idActual;
+		}
+
+		/**
+		 * @see servidor.util.AbstractIteradorDecorador#cerrar()
+		 */
+		@Override
+		public void cerrar() {
+		    try {
+		        super.cerrar();
+		    } finally {
+		        if (this.idActual != null) {
+		        	TablaDecoradoraConLock.super.liberarRegistro(idActual);
+		        	if (TablaDecoradoraConLock.this.esAislamientoReadCommitted()) {
+		        		if (TablaDecoradoraConLock.this.lockManager.estaBloqueado(this.idActual, false)) {
+		        			TablaDecoradoraConLock.this.lockManager.desbloquear(this.idActual);
+		        		}
+		        	}
+		        }
+		    }
+		}
+	}
+
 	private LockManager lockManager;
 
     private TransactionManager transactionManager;
@@ -196,81 +274,19 @@ final class TablaDecoradoraConLock extends AbstractTablaDecorador {
 			this.lockManager.bloquear(this.id(), false);
 		}
 		Iterador<Registro.ID> iterador = super.registros();
-		return new AbstractIteradorDecorador<Registro.ID>(iterador) {
-			
-			private Registro.ID idActual;
-            
-            private boolean consumido = true;
-		
-			/**
-             * @see servidor.util.AbstractIteradorDecorador#hayProximo()
-             */
-            @Override
-            public boolean hayProximo() {
-                if (!this.consumido) {
-                    //no pasar al siguiente hasta que no se consuma el actual
-                    return true;
-                }
-                if (this.idActual != null) {
-                	TablaDecoradoraConLock.super.liberarRegistro(idActual);
-                	if (TablaDecoradoraConLock.this.esAislamientoReadCommitted()) {
-                		if (TablaDecoradoraConLock.this.lockManager.estaBloqueado(this.idActual, false)) {
-                			TablaDecoradoraConLock.this.lockManager.desbloquear(this.idActual);
-                		}
-                	}
-                }
-                while (super.hayProximo()) {
-                    this.idActual = super.proximo();
-                    if (TablaDecoradoraConLock.this.esMasQueAislamientoReadUnCommitted()) {
-                    	TablaDecoradoraConLock.this.lockManager.bloquear(this.idActual, false);
-                    }
-                    Registro registro = TablaDecoradoraConLock.super.registro(this.idActual); 
-                    if (registro != null && registro.esValido()) {
-                        this.consumido = false;
-                        return true;
-                    }
-                    TablaDecoradoraConLock.this.lockManager.desbloquear(this.idActual);
-                }
-                this.idActual = null;
-                return false;
-            }
-
-            /**
-			 * @see servidor.util.AbstractIteradorDecorador#proximo()
-			 */
-			@Override
-			public Registro.ID proximo() {
-                if (this.consumido) {
-                    if (this.hayProximo()) {
-                        this.consumido = true;
-                        return this.idActual;
-                    }
-                    throw new NoSuchElementException("Ya no quedan elementos.");
-                }
-                this.consumido = true;
-                return this.idActual;
-			}
-		
-			/**
-			 * @see servidor.util.AbstractIteradorDecorador#cerrar()
-			 */
-			@Override
-			public void cerrar() {
-                try {
-                    super.cerrar();
-                } finally {
-                    if (this.idActual != null) {
-                    	TablaDecoradoraConLock.super.liberarRegistro(idActual);
-                    	if (TablaDecoradoraConLock.this.esAislamientoReadCommitted()) {
-                    		if (TablaDecoradoraConLock.this.lockManager.estaBloqueado(this.idActual, false)) {
-                    			TablaDecoradoraConLock.this.lockManager.desbloquear(this.idActual);
-                    		}
-                    	}
-                    }
-                }
-			}
-		
-		};
+		return new LockIteradorDecorador(iterador);
 	}
-	
+
+	/**
+	 * @see servidor.tabla.impl.AbstractTablaDecorador#registrosDesde(servidor.tabla.Registro.ID)
+	 */
+	@Override
+	public Iterador<Registro.ID> registrosDesde(Registro.ID idRegistro) {
+		if (this.esAislamientoSerializable()) {
+			this.lockManager.bloquear(this.id(), false);
+		}
+		Iterador<Registro.ID> iterador = super.registrosDesde(idRegistro);
+		return new LockIteradorDecorador(iterador);
+	}
+
 }
