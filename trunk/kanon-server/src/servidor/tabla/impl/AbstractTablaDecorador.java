@@ -53,6 +53,13 @@ public abstract class AbstractTablaDecorador implements Tabla {
 	}
 
 	/**
+	 * @see servidor.tabla.OperaRegistros#registrosDesde(servidor.tabla.Registro.ID)
+	 */
+	public Iterador<servidor.tabla.Registro.ID> registrosDesde(servidor.tabla.Registro.ID idRegistro) {
+		return this.tablaDecorada.registrosDesde(idRegistro);
+	}
+
+	/**
 	 * @see servidor.tabla.OperaRegistros#registro(servidor.tabla.Registro.ID)
 	 */
 	public Registro registro(servidor.tabla.Registro.ID idRegistro) {

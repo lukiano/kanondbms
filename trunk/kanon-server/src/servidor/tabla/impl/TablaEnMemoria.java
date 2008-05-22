@@ -57,6 +57,10 @@ public final class TablaEnMemoria implements Tabla {
         return this.contenido.registros();
     }
 
+	public Iterador<servidor.tabla.Registro.ID> registrosDesde(servidor.tabla.Registro.ID idRegistro) {
+		return this.contenido.registrosDesde(idRegistro);
+	}
+
     /**
      * @see servidor.tabla.OperaRegistros#actualizarRegistro(servidor.tabla.Registro.ID, java.util.Collection)
      */
