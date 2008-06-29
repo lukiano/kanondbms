@@ -1,0 +1,34 @@
+\newpage
+
+\section{Introducción}
+
+\subsection{Objetivos}
+
+El objetivo de este trabajo es construir un motor de base de datos relacional con fines académicos, para poder obtener una herramienta que permita una visión profunda de \textbf{\textit{cómo}} funciona un DBMS por dentro. Este proyecto se especializa en mostrar el trabajo de concurrencia transaccional y recuperación del motor. Para la parte de recuperación, este motor se basa en la familia de algoritmos ARIES \cite{ARIES}, el cual posee ciertas propiedades deseables en un método de recuperación eficiente y seguro.\\
+
+Las bases de datos académicas existentes, suelen concentrarse en el funcionamiento del analizador sintáctico, conversión a Algebra Relacional de la consulta, y posterior optimización de la misma. Suelen proveer índices basados en árboles B+, así como diversos métodos para la persistencia de tablas en disco y métodos de paginación en el Buffer Manager.
+Sin embargo, temas tan importantes como procesar varias consultas de manera simultánea y el sistema de recuperación de la base de datos frente a desastres, suelen ser ignorados por estos motores educacionales. Esto conlleva a que los interesados en aprender el funcionamiento de un DBMS, solo obtengan la teoría en lo que respecta al manejo de transacciones (concurrencia y control de bloqueo de datos) y recuperación de las mismas en caso de una caída imprevista del motor.\\
+
+
+\subsection{Problema a tratar}
+
+Con este proyecto se intenta solventar esta falencia en lo que respecta a motores académicos, proveyendo de un motor de base de datos educacional que muestre, tanto en la implementación como en el uso, a aquellos módulos encargados del manejo transaccional de las consultas a la base (Transaction Manager, Lock Manager) y recuperación de aquellas que hayan terminado pero sus contenidos no estuvieran volcados en un medio persistente (Recovery Manager).
+Este motor también tiene como finalidad dotar al Departamento de Ciencias de la Computación \cite{DCFCEN} de nuestra facultad \cite{FCEN}, de una herramienta para mostrar y enseñar el funcionamiento interno de una base de datos relacional con soporte de transacciones y recuperación.\\
+
+En la búsqueda de soluciones similares en distintos departamentos de las universidades del mundo, hemos encontrado que aquellas que muestran el funcionamiento de un DBMS, se concentran, como ya fue mencionado, en el análisis y optimización de consultas. Solo se ha visto un trabajo que extiende a una base de datos educacional existente, agregándole soporte de transacciones y recuperación \cite{MINIREL}.\\
+
+\subsection{Nuestro aporte}
+
+La contribución de este proyecto es la construcción de un motor de base de datos con fines educativos. Esto nos dio los objetivos de hacerlo simple, documentar su implementación y que sea posible mostrar, cuando se encuentra en uso, qué es lo que va haciendo, así como el estado interno de las estructuras del sistema.\\
+
+Para la construcción del motor nos hemos basado en lo aprendido durante la cursada de Bases de Datos \cite{BDFCEN}, y en la bibliografía de la cátedra \cite{RAMA03}, \cite{ULLMAN88} y \cite{BERN87}\\
+
+Como trabajo durante del curso, se nos pidió que el motor soporte el aborto de transacciones y recuperación de las mismas en caso de caídas, pero el único requisito era que el log de los eventos sea construido utilizando la técnica WAL, por lo que se realizó un sistema simple pero funcional. Luego, como trabajo final, se decidió cambiar este sistema por uno basado en ARIES, aunque manteniendo el fin educativo y de simplicidad en la implementación.\\
+
+Como se ampliará posteriormente, ARIES nos ha permitido que el Buffer Manager utilice un esquema STEAL / NO-FORCE \cite{RAMA03}, el cual simplifica la implementación del mismo. También era requisito que el sistema de bloqueos se encuentre basado en el algoritmo Two Phase Locking. Hemos extendido este requisito y agregamos soporte para los cuatro niveles estándares de aislamiento \cite{SQL92}.\\
+
+El trabajo también contiene un pequeño sistema de índices basados en hash para proveer mayor concurrencia entre consultas paralelas. Estas consultas son escritas en formato SQL estándar, y el motor se encarga de analizar y descomponer la sentencia SQL para luego poder ejecutarla sobre la base de datos.\\
+
+Para visualizar el funcionamiento del motor, y proveer una manera de ejecutar consultas y ver sus resultados, se dispone de un cliente gráfico \cite{KANONOP}, el cual permite simular muchas conexiones al servidor, con fines de poder ejecutar varias sentencias de manera concurrente. Este cliente también informa del estado de los objetos bloqueados y liberados durante el transcurso de cada transacción, y muestra los eventos del log correspondientes a cada operación dentro de las mismas.\\
+
+Para el diseño del motor nos hemos desviado de los clásicos algoritmos procedurales mostrados en los distintos papers, para intentar un acercamiento orientado a objetos. Esto incluye el uso de patrones de diseño y una arquitectura modular para un mayor entendimiento de cada componente, así como permitir modificaciones de las mismas por separado sin necesidad de cambiar a las demás.\\

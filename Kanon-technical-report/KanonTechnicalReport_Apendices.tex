@@ -1,0 +1,155 @@
+\newpage
+\section{Apéndices}
+    \subsection{Apendice I - Preguntas Adicionales}\label{PreguntasAdicionales}    
+	\begin{enumerate}
+	 \item Nery Pumpido se lesiona en el partido Argentina - URSS en el mundial del noventa en el minuto [1;12].
+	
+	 \item El árbitro del partido Argentina - Francia en el mundial Argentina ’78 fue el suizo Jean Dubach.
+	
+	 \item En el mundial Italia ’90, fueron expulsados 3 jugadores por derribarlo a Claudio Caniggia, a saber: 
+	 \begin{itemize}
+		 \item Andre Kana-Biyick (Camerún), minuto 61.
+		 \item Benjamin Massing (Camerún), minuto 88 por doble amonestación.
+		 \item Vladimir Bessonov (URSS), minuto 48.
+	 \end{itemize}
+	 
+	 \item En el mundial de México '86, Ricardo Bochini jugó sólamente 6 minutos, en el final del partido Argentina - Béljica.
+	 
+	 \item El arquero suplente del seleccionado argentino en la final de 1930 fue Ángel Bossio.
+
+
+\newpage
+
+	\end{enumerate}
+    \subsection{Apendice II - Enunciado}\label{Enunciado}    
+
+	%Enunciado del trabajo
+	\begin{centering}
+\bf Laboratorio de M\'etodos Num\'ericos - Primer cuatrimestre 2006 \\
+\bf Trabajo Pr\'actico N\'umero 4: El TP del Mundial! \\
+\end{centering}
+
+\vskip 25pt
+\hrule
+\vskip 11pt
+
+\textbf{Introducci\'on}
+
+Nos encontramos en la m\'axima cita del f\'utbol mundial...~de robots.
+Uno de los problemas m\'as importantes a resolver en este contexto es
+predecir con la mayor anticipaci\'on posible la posici\'on futura de la 
+pelota en funci\'on de su posici\'on en el pasado reciente. Sobre la base
+de estas predicciones se coordinan los movimientos de los jugadores de
+campo y, en el caso que nos ocupa ahora, la posici\'on del arquero cuando
+existe peligro de gol.
+
+Cuando la pelota se dirige hacia nuestro arco, es muy importante que
+ubiquemos el arquero en la posici\'on exacta en la que la pelota 
+cruzar\'a la l\'\i nea de gol, de manera que pueda interceptarla y evitar
+la ca\'\i da de nuestra valla. El sistema de control de cada equipo
+suministra informaci\'on en pasos discretos. En cada paso nuestras
+c\'amaras de video determinan la posici\'on de la pelota, y debemos
+indicarle la acci\'on a seguir al arquero: quedarse quieto, moverse 
+hacia la izquierda o moverse hacia la derecha.
+
+Los postes del arco est\'an ubicados en las coordenadas (-1,0) y (1,0),
+y la l\'\i nea de gol es el segmento entre estos dos puntos. Se marca
+un gol cuando la pelota cruza este segmento. Vistos desde arriba, la pelota
+es un c\'\i rculo de 10 cm.~de radio y el arquero es un jugador cuadrado
+de 10 cm.~de lado, cuyo punto central est\'a ubicado sobre la l\'\i nea
+de gol. Inicialmente el punto central del arquero se encuentra en la
+posici\'on (0,0), y en cada paso se le indica al arquero qu\'e acci\'on
+debe tomar. Si se le indica un movimiento hacia alguno de los lados
+(izquierda o derecha) y en el paso anterior estaba quieto o se estaba
+moviendo hacia ese mismo lado, entonces el arquero se mueve 5 cm.~en
+la direcci\'on indicada. Por el contrario, si en el paso anterior se
+hab\'\i a indicado un movimiento en la direcci\'on opuesta, entonces
+el arquero se queda quieto durante el paso actual.
+
+Un problema fundamental que debe enfrentarse es la presencia de ruido
+en las mediciones de la posici\'on de la pelota. El sistema de visi\'on
+est\'a sujeto a vibraciones, golpes y errores de captura de datos,
+que hacen que las mediciones de la pelota sufran errores, e incluso 
+registren posiciones irreales (es un efecto muy com\'un que la pelota
+``desaparezca'' en un cuadro y vuelva a aparecer en el cuadro siguiente).
+Por otra parte, la pelota no siempre viaja hacia el arco en l\'\i nea
+recta sino que puede describir curvas m\'as o menos complicadas,
+dependiendo del ``efecto'' dado por el jugador al momento de impactar
+la pelota y de posibles curvaturas en la superficie del campo de juego.
+
+\textbf{Enunciado}
+
+El objetivo del trabajo pr\'actico es implementar un programa que
+tome como datos las posiciones sucesivas de la pelota y que determine
+en cada paso qu\'e debe hacer el arquero para evitar el gol. Se deben
+tomar las mediciones con la posici\'on de la pelota de un archivo
+de entrada, que tiene en cada l\'inea el n\'umero de medici\'on,
+la posici\'on $x$ y la posici\'on $y$ de la pelota, separados
+por punto y coma. La \'ultima l\'\i nea del archivo tiene -1 como
+primer dato, indicando el fin de las mediciones.
+
+En cada paso, el programa debe determinar qu\'e acci\'on debe tomar
+el arquero, escribiendo la decisi\'on correspondiente en un archivo
+de salida. Cada l\'\i nea de este archivo debe tener el n\'umero
+de medici\'on y la acci\'on del arquero (0: quedarse quieto, 1: izquierda,
+2: derecha), separados por punto y coma. El programa debe tomar por
+l\'\i nea de comandos el nombre del archivo de entrada y el nombre
+del archivo de salida. Dado que estamos simulando
+la decisi\'on en tiempo real, para generar la acci\'on correspondiente
+a una medici\'on el programa solamente puede usar la informaci\'on
+de esa medici\'on y las anteriores (es decir, no se puede consultar
+lo que suceder\'a en el futuro para tomar las decisiones).
+
+Las instrucciones al arquero deben estar basadas en un mecanismo de
+predicci\'on de la posici\'on futura de la pelota. Esta predicci\'on
+se debe realizar sobre la base de alg\'un m\'etodo num\'erico visto
+en la materia, o alguna variaci\'on de los temas vistos en clase.
+Sugerimos consultar con los docentes del laboratorio para validar
+los enfoques que propongan implementar.
+
+Se adjunta a este enunciado un programa simulador de los tiros al
+arco, junto con algunos archivos de prueba para testear el formato
+de los archivos de entrada y salida. Todos los programas participar\'an
+de un campeonato mundial de arqueros, y el grupo cuyo arquero logre
+atajar la mayor cantidad de tiros al arco se har\'a acreedor a la
+copa ``Laboratorio de M\'etodos Num\'ericos'' al mejor guardavallas del
+mundial.
+
+\textbf{Preguntas adicionales}
+
+\begin{enumerate}
+\item >En qu\'e minuto del partido Argentina-Uni\'on Sovi\'etica del mundial
+Italia '90 se lesion\'o Nery Pumpido, el arquero de la selecci\'on
+argentina?
+
+\item >C\'omo se llamaba el \'arbitro del partido Argentina-Francia en
+el mundial Argentina '78?
+
+\item >Cu\'antos jugadores fueron expulsados en el mundial Italia '90
+por derribarlo a Claudio Caniggia?
+
+\item >Cu\'antos minutos jug\'o Ricardo Bochini en la semifinal del
+mundial M\'exico '86?
+
+\item >C\'omo se llamaba el arquero suplente de la selecci\'on argentina
+en la final del mundial Uruguay '30?
+\end{enumerate}
+
+\vskip 15pt
+
+\hrule
+
+\vskip 11pt
+
+Fecha de entrega: Lunes 26 de Junio
+
+
+\subsection{Apendice III - Fuentes}\label{Fuentes}    
+
+\begin{scriptsize}
+    \begin{verbatim}
+
+    %Fuentes
+    
+    \end{verbatim}
+\end{scriptsize}

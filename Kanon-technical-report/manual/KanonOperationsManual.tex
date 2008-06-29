@@ -1,0 +1,46 @@
+
+\documentclass[a4paper,11pt]{article}
+
+\usepackage[spanish, activeacute]{babel}
+\usepackage[ansinew]{inputenc}
+\usepackage{graphicx}
+
+\renewcommand{\labelitemii}{\Radioactivity}
+
+%PSUDO
+
+% PSEUDOCODIGO
+\newcounter{linea}
+\newenvironment{pseudo}{
+	\setcounter{linea}{0}
+    \begin{small}
+    \begin{tt}
+    \begin{tabbing}
+        ------ \= ---- \= ---- \= ---- \= ---- \= ---- \= ---- \kill
+} {
+    \end{tabbing}
+    \end{tt}
+    \end{small}
+}
+
+\newcommand{\n}{
+    \addtocounter{linea}{1}
+    \arabic{linea}.
+}
+
+\newcommand{\tab}{\>}
+%END PSEUDO
+\begin{document}
+
+\markboth{left head}{KANON dbms Operations manual } \pagestyle{myheadings} 
+
+\input{KanonOperationsManual_caratula}
+\newpage
+\tableofcontents
+\newpage
+\listoffigures
+\newpage
+
+\input{KanonOperationsManual_contenido}
+
+\end{document}
