@@ -1,0 +1,156 @@
+\section{Requisitos del Sistema}
+
+Tanto el cliente como el servidor fueron hechos en la plataforma Java SE versión 5. El runtime de la misma es necesario para poder ejecutarlos, y los programas funcionarán en cualquier sistema que cumpla con los requisitos del runtime (x86, x64 o PowerPC; ha sido probado en Windows, Linux y Mac OSX). La maquina virtual se puede conseguir de www.java.com\\
+
+\section{Ejecución de los programas}
+
+Para correr al servidor y al cliente se disponen de respectivos programas batch que se encargan de levantarlos.\\
+
+Para el servidor, el archivo a ejecutar es \textbf{servidor.bat} dentro del directorio \textbf{kanon-server}.\\
+
+Para el cliente, el archivo es \textbf{cliente.bat} dentro del directorio \textbf{kanon-cliente}.\\
+
+Para bajar el servidor, se debe ejecutar el archivo \textbf{stop.bat} dentro del directorio \textbf{kanon-server}.\\
+
+\section{Parámetros de configuración disponibles}
+
+En el servidor, a través de parámetros pasados en la ejecución del batch, se puede modificar la configuración inicial del motor. Los parámetros se pasan de la forma:\\
+\textbf{\textit{-Dparam=valor}}
+
+Los parámetros soportados son los siguientes:\\
+
+\textbf{pool:} toma como valor un número que indica la cantidad de slots disponibles para paginas que tendrá el Buffer Manager. Por omisión son 8.
+
+\textbf{politica:} indica el algoritmo de remoción utilizado en el Buffer Manager cuando no quedan slots libres. Los valores pueden ser: \textbf{LRU}, \textbf{MRU}, \textbf{LFU}, \textbf{MFU}, \textbf{Azar}, \textbf{LIFO}, \textbf{FIFO}. Por omisión se toma LRU. Las opciones son case-sensitive.
+
+\textbf{prevencion:} indica el algoritmo de prevención de deadlock utilizado por el Lock Manager. Los valores disponibles son: \textbf{CautionWaiting}, \textbf{WaitDie}, \textbf{WoundWait}, \textbf{Nulo}. Por omisión se toma CautionWaiting. Como el anterior, las opciones son case-sensitive.
+
+
+\section{Arquitectura, diseño y especificación del cliente}
+
+Con el objetivo de poder testear y verificar el correcto funcionamiento del motor de base de datos construido, pensamos en el desarrollo de una herramienta cliente cuya principal funcionalidad iba ser poder verificar que efectivamente estábamos haciendo las cosas bien y que el motor de base de datos funciona correctamente.\\
+
+Sus principales características son las siguientes:\\
+\begin{enumerate}
+	\item Poder enviar consultas al servidor y verificar que el servidor las ha procesado correctamente.
+
+	\item Hacer pruebas de concurrencia sobre el motor, es decir poder ejecutar más de una consulta de manera simultánea.
+
+	\item Observar que la implementación de ARIES es correcta y funciona bien.
+
+	\item Observar los locks y el valores que se insertan en el LOG.
+
+	\item Poder simular un crash y ver como funciona la recuperación.
+\end{enumerate}
+
+
+La arquitectura de alto nivel del cliente se resume en la siguiente figura:
+
+\begin{figure}[h]
+		\centering
+		\includegraphics[scale=0.6]{img/arquitectura.png}
+		\label{fig:arquitectura.png}
+		\caption{Arquitectura del cliente}
+\end{figure}
+
+A continuación se describe la funcionalidad de cada uno de los componentes\\
+ 
+\begin{itemize}
+	\item \textbf{Java Swing UI: }Básicamente es el paquete de clases que usamos para construir la capa de presentación del cliente, la versión de swing que usamos es la que viene con Java 5.
+
+	\item \textbf{Pool de clientes conectados: }Es un objeto contenedor que almacena todos los clientes que están conectados con el motor.
+
+	\item \textbf{Log Observer: }Es proceso que se encargar de estar todo el tiempo leyendo el log, se ejecuta como un thread aparte, ósea como un subproceso del cliente
+
+	\item \textbf{Lock Observer: }Es proceso que se encarga de estar todo el tiempo leyendo la tabla de locks, se ejecuta como un thread aparte, o sea como un subproceso del cliente al igual que el log observer.
+\end{itemize}
+
+El esquema usado para conectarse con el servidor es el clásico client-server, a través de sockets. Al agregarse un cliente, lo primero que se hace es crear un nuevo socket; el siguiente diagrama de secuencia muestra como se crea un cliente y se agrega al pool de clientes conectados:\\
+
+ 
+\begin{figure}[h]
+		\centering
+		\includegraphics[scale=0.5]{img/secuencia.png}
+		\label{fig:secuencia.png}
+		\caption{Diagrama de secuencia de la ejecución de una consulta}
+\end{figure}
+
+Cabe destacar que solo se podrá agregar un cliente al pool de clientes si es posible establecer una conexión con el servidor, de lo contrario no se podrá agregar.\\
+
+\begin{figure}[h]
+		\centering
+		\includegraphics[scale=0.35]{img/cliente.png}
+		\label{fig:cliente.png}
+		\caption{Captura de pantalla del cliente en funcionamiento}
+\end{figure}
+
+Los botones disponibles son:\\
+\begin{itemize}
+	\item \textbf{Agregar cliente}: Crea una nueva conexión al servidor para enviar consultas.
+
+	\item \textbf{Borrar cliente:} Borra a un cliente creado.
+
+	\item \textbf{Ejecutar concurrentemente:} Lanza a la vez las consultas escritas en todos los clientes abiertos.
+\end{itemize}
+
+Y para cada cliente:\\
+\begin{itemize}
+	\item \textbf{Enviar consulta:} Envía la consulta escrita al servidor y aguarda el resultado.
+
+	\item \textbf{Cargar archivo:} Carga una consulta desde un archivo de texto y la coloca en el cuadro del editor de consultas.
+
+	\item \textbf{Borrar consulta:} Limpia el contenido del editor de consultas.
+
+	\item \textbf{Borrar resultados:} Limpia el contenido de la pantalla de resultados.
+\end{itemize}
+
+
+\section{Sentencias SQL soportadas}
+
+Las siguientes plantillas de sentencias SQL son las soportadas por el servidor:\\
+\\
+\textbf{INSERT INTO tabla (col1, col2...) VALUES (valor1, valor2...);}\\
+Inserta en una tabla una fila con los valores especificados.\\
+\\
+\textbf{INSERT INTO tabla (col1, col2...) SELECT...;}\\
+Inserta en una tabla el resultado de la consulta dentro del SELECT.\\
+\\
+\textbf{UPDATE tabla SET col1 = expresion WHERE expresionWhere;}\\
+Actualiza los registros de la tabla que cumplan con la condicion del Where a los valores especificados.\\
+\\
+\textbf{SELECT col1, expresion1... FROM tabla WHERE expresionWhere;}\\
+Retorna los resultados de la tabla que cumplan con la condicion del Where.\\
+\\
+\textbf{DELETE FROM tabla WHERE expresionWhere;}\\
+Borra de la tabla a aquellos registros que cumplan con la condicion del Where.\\
+\\
+\textbf{CREATE TABLE tabla (col1 NUMERIC/CHAR(XX)...);}\\
+Crea una nueva tabla en el sistema, con las columnas especificadas. Los tipos disponibles son NUMERIC(4) y CHAR(vv) donde vv es el tamaño maximo de caracteres en la columna.\\
+\\
+\textbf{DROP TABLE tabla;}\\
+Borra una tabla del sistema.\\
+\\
+\textbf{BEGIN TRANSACTION;}\\
+Inicia una transacción explicita, o una transacción anidada si ya habia una en curso.\\
+\\
+\textbf{COMMIT TRANSACTION;}\\
+Realiza un commit de la transacción en curso. Continúa con la transacción padre en caso de existir una.\\
+\\
+\textbf{SAVEPOINT nombre;}\\
+Guarda un savepoint de la posicion actual de la transaccion en curso. Si ya existía un savepoint con ese nombre, es sobrescrito.\\
+\\
+\textbf{ROLLBACK nombre;}\\
+Realiza un rollback de la transacción en curso hasta el savepoint especificado. No termina la transacción.
+\\
+\textbf{ROLLBACK TRANSACTION;}\\
+Realiza un rollback de toda la transacción en curso. Continúa con la transacción padre en caso de existir una.\\
+\\
+\textbf{CRASH;}\\
+Comando especial para simular una caída del sistema con fines educativos. Detiene el servidor. Se recomienda cerrar el cliente luego de esta operación.\\
+\\
+\textbf{CHECKPOINT;}\\
+Realiza un checkpoint en la base de datos, para acortar el tiempo necesario para realizar una recuperación en caso de una caída del sistema. Al bajar el servidor se realiza un checkpoint automáticamente.\\
+\\
+\textbf{ISOLATION nivelAislamiento;}\\
+Establece el nivel de aislamiento para las futuras transacciones. Los valores posibles son:
+\textit{READ\_UNCOMMITTED}, \textit{READ\_COMMITTED}, \textit{REPEATABLE\_READ}, \textit{SERIALIZABLE.}\\
