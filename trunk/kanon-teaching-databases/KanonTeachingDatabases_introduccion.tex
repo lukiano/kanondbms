@@ -1,0 +1,27 @@
+\section{Introduction}
+
+\subsection{Goals}
+
+This work is intended to provide an academic database engine that shows those components responsible for the transactional behavior (Transaction Manager; Lock Manager) of any query asked to the database and also shows the recovery work for those transactions that finished but their changes were not made persistent yet.
+
+An additional purpose of this work is to give to the Department of Computer Sciences \cite{FCENDC} of our College \cite{FCEN} a tool able to show and teach the inner works of a relational database which supports transactions and recovery techniques.
+
+For a greater understanding of this project refer to the available Kanon dbms Technical Report \cite{LBCP07b}.
+
+\subsection{Our contribution}
+
+The objective of this work is to build a relational database engine with academic aims, to make a tool that allows to see \textbf{\textit {how}} a DBMS works.\footnote{For greater detail on each topic of this paper, full documentation and implementation source code are available.} This project focuses on showing the behavior of transactional concurrency and transaction recovery. The recovery manager engine is based on the ARIES family of algorithms \cite {MHLPS89}, which has desirable properties for an efficient and safe recovery method.
+
+These academic aims gave us the requirement to build the engine as simple as possible, to document the implementation and to show, when the DBMS is being used, what it is currently doing, as well as the internal state of the system structures.
+
+To program the basic components and modules, we considered what was learned during the databases course \cite{FCENBD}, and read from the course main texts (\cite{RaGh03}, \cite{Ullm88} and \cite{BeHG87}).
+
+As it is explained later, the ARIES algorithms allowed the Buffer Manager to use a \textbf{steal / no-force} scheme \cite{RaGh03}. This scheme makes the manager implementation simpler, as there is no need for shadow copies.  Also it was a requirement that the locking system was based on the Two Phase Locking idea. We have extended this requirement and added support to the four standard isolation levels \cite{WIISLE}.
+
+The DBMS also includes hash based indexes to provide greater concurrence between queries executed in parallel. These queries are written in standard SQL, and the engine analyses and decomposes the query to execute it on the data base records.
+
+In order to visualize the engine operation, and to provide a way to execute queries and see their results, a special client was built \cite{LBCP07a}, which allows many concurrent connections to the server, and to execute several queries at the same time. This client also reports the state of whatever object is locked or released during the course of each transaction, and shows the log events of each operation within those transactions.
+
+For the engine design, we departed from classic procedural algorithms showed in several papers, to try an object-oriented approach. This includes the use of design patterns and a modular architecture for a greater understanding of each component, thus allowing component modifications to be independant of each other.
+
+The chosen language to develop the RDBMS was Java for the great quantity of plugins existing to make graphical interfaces, as well as the simplicity of its language, power that is propitious for the accomplishment of academic works of this style. Also we emphasize to have made the implementation using Design Patterns, between which we can mention: Factory, Strategy, Decorator, Singleton and Abstract factory \cite{GHJV95}.

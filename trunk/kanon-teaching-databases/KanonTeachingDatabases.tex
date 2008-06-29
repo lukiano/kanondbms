@@ -1,0 +1,37 @@
+
+\documentclass[a4paper,10pt]{article}
+
+\usepackage{graphicx}
+
+%This allows the bibliography to be in only one page
+ \let\oldthebibliography=\thebibliography
+  \let\endoldthebibliography=\endthebibliography
+  \renewenvironment{thebibliography}[1]{%
+    \begin{oldthebibliography}{#1}%
+      \setlength{\parskip}{0ex}%
+      \setlength{\itemsep}{0ex}%
+  }%
+  {%
+    \end{oldthebibliography}%
+  }
+
+
+\begin{document}
+
+\markright{Teaching Databases}
+\pagestyle{myheadings} 
+
+\input{KanonTeachingDatabases_caratula}
+\newpage
+
+\input{KanonTeachingDatabases_introduccion}
+
+\input{KanonTeachingDatabases_Diseno}
+
+\input{KanonTeachingDatabases_conclusiones}
+
+\input{KanonTeachingDatabases_TrabajoFuturo}
+
+\input{KanonTeachingDatabases_Bibliography}
+
+\end{document}
