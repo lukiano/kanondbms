@@ -1,0 +1,288 @@
+\newpage
+\section{Implementacion} 
+
+A continuación se describen los temas de implementación, separados por módulos para una mejor comprensión.\\
+
+\subsection{Plataforma}
+
+El lenguaje elegido para desarrollar el RDBMS fue Java dada la gran cantidad de plugins existentes para hacer interfaces graficas,  así como la simplicidad de su lenguaje, poder que resulta propicio para la realización de trabajos académicos de este estilo. Utilizamos la versión de Java 5.0 que trae mejoras con respecto a las anteriores versiones para simplificar la programación de la aplicación en los aspectos de diseño y concurrencia. También destacamos el haber hecho la implementación usando Patrones de Diseño, entre los que podemos mencionar: Factory, Strategy, Decorator, Singleton y Abstract factory \cite{GAMMA95}.\\
+
+Entre los plugins utilizados, usamos un CVS remoto para subir las fuentes y ad-ministrar las versiones de los diferentes módulos \cite{CVSSSL}. Usamos el Jigloo para crear la interfaz grafica del cliente. \cite{JIGLOO}\\
+
+Para ciertas funcionalidades del sistema utilizamos paquetes especializados, a saber:\\
+
+\begin{itemize}
+	\item ZQL: paquete que provee análisis de sentencias SQL y la creación de estructuras Java que corresponden a las mismas \cite{ZQL}.\\
+	\item SC: librería que realiza el coloreo de palabras clave de una sentencia SQL para facilitar la lectura de la misma en el cliente \cite{SYNCOL}.\\
+
+	\item Commons-Collections: conjunto de diferentes estructuras de datos e implementaciones especializadas (Conjunto,  Lista, Mapa) \cite{COMCOL}.\\
+\end{itemize}
+
+El sistema sigue el protocolo Cliente - Servidor, en donde el motor de base de datos actúa en un modo pasivo, escuchando por un puerto a que se conecte un cliente. Éste le va haciendo pedidos al servidor, el cual los procesa y devuelve resultados.\\
+
+Ambos programas, al inicializar, abren puertos de escucha utilizando los métodos provistos por Java y delegando al mismo los detalles de conexión.\\
+El intercambio de mensajes se hace a través de estos Sockets abiertos, y utilizan un formato de texto simple. Los pedidos del cliente hacia el servidor serán las sentencias SQL escritas por el usuario, mientras que los resultados en sentido inverso son los mensajes de respuesta del servidor. 
+Esta respuesta puede ser:\\
+
+\begin{itemize}
+	\item un mensaje de información explicando el resultado de la sentencia, cuando esta se ejecuta de manera exitosa. 
+\end{itemize}
+
+
+\begin{itemize}
+	\item 	un texto conteniendo los resultados en un formato de tabla cuando la sentencia es una consulta.
+\end{itemize}
+
+	
+\begin{itemize}
+	\item un mensaje con una descripción de error cuando ocurre uno al procesar la sentencia.
+\end{itemize}
+
+Existen también dos puertos traseros en el servidor, los cuales sirven para darle información al cliente administrador sobre el estado de las estructuras de Lock, y de los eventos que van siendo guardados en el Log. Éstos son provistos para que los usuarios puedan saber, en tiempo real, los eventos ocurridos dentro del servidor y poder entender los mecanismos del mismo.\\
+
+
+
+
+\subsection{Disk Space Manager}
+
+Cada página ha sido implementada de manera tal que contiene un número fijo de re-gistros, y un número fijo de bytes (64KB). La cantidad de registros depende de las columnas de la tabla, es decir, dependiendo de la cantidad de columnas y tamaño de las mismas. Este formato de página hace que no existan registros guardados en más de una página, o sea, cada página guarda una cantidad entera de registros. Esto trae la simplicidad en el motor de transacciones, ya que los eventos de un registro siempre corresponden a una sola página, pero trae la contrariedad de no poder crear tablas cuya longitud de registro sea mayor al tamaño especificado de una página. Esta decisión fue tomada con fines de simplificar el motor de transacciones. El tamaño de cada página va a variar dependiendo si se aprovechan los 64KB o, por el hecho de no cortar registros entre 2 páginas, si es menor al mismo.\\
+
+La nomenclatura elegida para el nombramiento de los archivos en disco es la siguiente:\\
+
+\begin{itemize}
+	\item NumeroTabla.NumeroPagina para identificar un bloque que representa a una página. No se utiliza nombre de tabla porque, como el motor es case sensitive (diferencia los nombres en mayúscula y minúscula), esto ocasionaba problemas para quellas plataformas en donde el sistema de archivos I/O es case insensitive.
+
+	\item NumeroTabla.NumeroColumna.NumeroHash.NumeroBucket para los buckets de los índices.
+\end{itemize}
+
+Las páginas guardadas en binario, se mantienen en los slots del Buffer Manager, y son transformadas en objetos entendibles por el motor al momento de la lectura y escritura de registros. Al no haber tipo de datos de longitud variable, revisando en el catálogo la tabla de columnas es posible saber cuál es la longitud de cada registro correspondiente a una determinada tabla.\\
+
+
+Para saber si un registro se encuentra libre u ocupado, se pensaron dos maneras:\\
+
+
+\begin{enumerate}
+	\item guardar al principio de la página un conjunto de bits, en donde si se encuentra encendido el n-ésimo bit, quiere decir que el n-ésimo registro está ocupado.
+	
+	\item que el primer bit de cada registro sea un valor de verdad que indique si el mismo está libre o no.
+\end{enumerate}
+
+La manera (a) tiene la ventaja que es fácil saber si una página está vacía o llena, 
+pues todos los bits se encuentran consecutivos y si están todos desactivados o activos indican (respectivamente) los estados mencionados. Por otro lado, si en el log de ARIES se guardan los cambios a nivel de bytes, entonces es conveniente que el indicador se encuentre junto con el resto del contenido del registro, como en la manera (b), para guardar en un solo evento los bytes cambiados por la modificación del registro. Como los eventos del log son lógicos, se decidió utilizar la opción (a). Esta política está implementada en la clase ArregloBits.
+
+
+Además, se crearon métodos que convierten los elementos Java, que representan los tipos soportados por el motor, a arreglos binarios de tamaño fijo, determinado por el tipo, y que contienen una representación del valor del elemento. Luego se guardan de manera consecutiva estos arreglos de bytes, respetando el orden según las columnas de la tabla. Notar que no se guarda ninguna información respecto a qué tipo es o la longitud del arreglo de bytes, pues esta información se obtiene al consultar los tipos de las columnas de la tabla correspondiente.\\
+
+
+
+\subsection{Buffer Manager}
+
+En el momento de realizar el análisis previo a la implementación de este proyecto, hemos observado que en la mayoría de los casos iba a existir una pequeña cantidad de páginas con un enorme número de referencias. Por este motivo es que, en nuestro diseño, decidimos incluir una estructura que nos permita mantener una cierta cantidad de páginas en memoria sin la necesidad de leerlas de la memoria secundaria constantemente. Esta estructura encargada de traer páginas de memoria secundaria a memoria principal es el Buffer Manager, el cual para este propósito, posee una colección de páginas llamadas \textbf{Frames} (también denominadas \textbf{Buffer Pool}). La cantidad de Frames en el pool del Buffer Manager es configurable.\\
+
+
+\begin{figure}[h]
+		\centering
+		\includegraphics[scale=0.6]{img/BufferManagerImp.png}
+		\label{fig:BufferManagerImp.png}
+		\caption{Implementación del Buffer Manager de Kanon}
+\end{figure}
+
+
+El pool de Frames está implementado con un mapa que tiene el ID de una página como clave y la página propiamente dicha como valor. Este mapa se encuentra sincronizado, pues es accedido por varios threads, y sincronizar las operaciones principales del Buffer Manager era demasiado costoso. El tamaño del mapa es configurable, de manera de poder realizar comparaciones entre distintos tamaños para conocer diferencias de performance al utilizar más memoria en el pool.\\
+
+Como ya mencionamos, la tarea fundamental del Buffer Manager es traer páginas de disco y brindarle a las clases superiores los métodos necesarios para mantenerlas en memoria hasta que estos digan lo contrario. Sin embargo estas páginas liberadas solo serán removidas del Buffer y grabadas nuevamente en el disco, en el caso de haber sido modificadas, cuando no existan más frames libres en el Buffer y se solicite alocar una página que no se encuentra en el mismo en ese momento.\\
+
+Para realizar este procedimiento utilizamos un algoritmo de remoción de páginas. La implementación del Buffer Manager utiliza una Interfaz para acceder a la política de reemplazo. Distintas implementaciones de esta interfaz proveen algoritmos \textbf{FIFO}, \textbf{LRU}, \textbf{MRU}, \textbf{LFU}, \textbf{MFU} y \textbf{remoción al azar}. Cada uno de ellos tienes sus ventajas y desventajas según el procedimiento que se esté realizando. Por ello se recomiendan usar híbridos (por ejemplo, una mezcla entre \textbf{LFU} y \textbf{LRU}). Sin embargo, en vistas de mantener el trabajo simple y entendible, no se han implementado algoritmos avanzados de reemplazo de páginas. La política de reemplazo a utilizar por la aplicación es configurable.\\
+
+Cada página tiene la propiedad de saber si esta sucia o no, es decir, si se modificó desde la última vez que se guardó en disco. Con esta información, necesaria para el funcionamiento de ARIES, se utiliza la llamada \textbf{Dirty-Pages table}, la cual provee información sobre las páginas que han sido modificadas durante el uso normal de la base de datos. Esta tabla también es usada cuando se recupera el sistema luego de una caída. Cada entrada de la tabla consiste de dos campos: PageID y RecLSN. Durante el procesamiento normal, cuando una página se fija en un slot del Buffer Manager para modificarla, se registra el LSN del próximo evento a ser guardado en el log (o sea, el LSN del fin del log). Este valor indica desde qué punto en el log pueden haber modificaciones sobre la pagina que probablemente no se encuentren en la versión de almacenamiento estable de la misma (útil para saber hasta qué punto se encontraba actualizada la página en caso de suceder una caída). Los contenidos de esta tabla son incluidos en el registro de checkpoint. Luego, cuando se recupera el sistema y se lee dicho registro, se recrea esta tabla  y es modificada durante la fase de Análisis. El menor valor de RecLSN en la tabla indica el punto de partida para la fase de Redo al momento de recuperar el sistema.\\
+
+Las páginas cuentan con una bandera que indica si han sido modificadas. La misma es marcada cuando se realiza una inserción, actualización o remoción de un registro de tal página. Luego, antes de remover la página de memoria, el Buffer Manager la persiste (llamando al Disk Space Manager) en caso de estar marcada, para evitar que se pierdan los cambios realizados.\\
+
+
+
+\subsection{Ejecutor}
+
+El Server va leyendo cada sentencia que le llega desde el cliente. Por cada una debe: analizarla, ejecutar el comando correspondiente y devolver el resultado o error.\\
+
+Una de las principales características de nuestras clases XQL (las cuales son una translación directa de las clases provistas por el analizador), es que se pueden agregar nuevos componentes fácilmente sin tener que realizar modificaciones a la clase. Toda clase XQL implementa XStatement con sus 2 métodos: \texttt{zqlToXql()} y \texttt{execute()}. El primero permite dado un objeto de la clase ZQL (la devuelta por el analizador) copiar y procesar sus componentes a su par en XQL. El método \texttt{execute()} realiza la ejecución propia de cada statement. De esta forma obtenemos un diseño de código mucho más escalable, permitiendo su modificación fácilmente. Esta implementación es tomada del patrón de diseño Strategy \cite{GAMMA95}, cada XQL sabe que hacer, por lo que el ejecutor se desliga de esos detalles.\\
+
+Desde el Servidor, se debe verificar si ya hay una transacción abierta o si se debe crear una transacción de manera implícita para la sentencia que se está analizando.
+Una transacción tiene dos formas de iniciarse, de manera explícita o implícita. De manera explícita, el cliente solicita mediante una sentencia (BEGIN TRANSACTION) que desea abrir una transacción, y para cerrar la transacción el cliente debe indicar si aborta o realiza commit del conjunto de sentencias. De manera implícita, el cliente envía una sentencia sin tener abierta una transacción. Para este caso, el servidor inicia una transacción para esa sentencia, y una vez ejecutada esa transacción procede a realizar commit sin necesidad de confirmación por parte del cliente (en el caso de que se haya lanzado una excepción, se aborta la transacción).\\
+
+\subsection{Recovery Manager}
+
+Para la implementación orientada a objetos del módulo, existen entidades que representan a cada evento posible de los existentes en el log, y a medida que se va leyendo el mismo, estos objetos son creados y dentro de cada uno existe un código propio para las tres fases correspondientes. El propósito de la fase de Análisis es saber cuáles transacciones se encontraban en curso cuando se produjo la caída, y que páginas contenían modificaciones que no fueron guardadas en disco. La fase de Redo se encarga de reproducir las modificaciones de todas las transacciones involucradas en aquellas páginas no persistidas, y la fase de Undo consiste en luego deshacer los cambios por las transacciones que no habían hecho commit. Entonces, los tres ciclos principales en el modulo se encargan de leer el log y crear los eventos, y cada evento sabe qué hacer según el ciclo que se encuentre. Esto permite una mejor compresión del algoritmo de recuperación, así como también permite realizar modificaciones al mismo o a eventos en particular sin que ello afecte a las demás componentes que interactúan en el proceso.\\
+
+Los eventos disponibles en este proyecto para el modulo de recuperación son:\\
+
+\begin{itemize}
+	\item 	Evento de inserción de un registro en una página de una tabla: contiene la transacción a la que pertenece, el LSN del evento anterior en la transacción, el identificador del registro insertado y los valores de cada columna de la tabla afectada.
+	
+\item Evento de modificación de un registro en una página de una tabla: contiene la transacción a la que pertenece, el LSN del evento anterior en la transacción, el identificador del registro modificado, los valores originales de las columnas modificadas, y los nuevos valores que ocuparán las mismas en ese registro.
+
+\item 	Evento de borrado de un registro en una página de una tabla: contiene la transacción a la que pertenece, el LSN del evento anterior en la transacción, el identificador del registro borrado y los valores originales de las columnas de la tabla para ese registro.
+
+\item 	Evento CLR de inserción de un registro en una página de una tabla: contiene la transacción a la que pertenece, el LSN del evento anterior en la transacción, el identificador del registro insertado y un conjunto de UndoNextLSN (modificación hecha para el soporte de transacciones anidadas, detallada más adelante en el texto).
+
+\item 	Evento CLR de modificación de un registro en una página de una tabla: contiene la transacción a la que pertenece, el LSN del evento anterior en la transacción, el identificador del registro modificado, los valores originales de las columnas afectadas antes por la modificación y un conjunto de UndoNextLSN (modificación hecha para el soporte de transacciones anidadas, detallada más adelante en el texto).
+
+\item 	Evento CLR de borrado de un registro en una página de una tabla: contiene la transacción a la que pertenece, el LSN del evento anterior en la transacción, el identificador del registro borrado, los valores originales de las columnas del registro y un conjunto de UndoNextLSN (modificación hecha para el soporte de transacciones anidadas, detallada más adelante en el texto).
+
+\item 	Evento de inserción de un registro en una página de un índice: contiene la transacción a la que pertenece, el LSN del evento anterior en la transacción, el identificador del registro-índice insertado y el identificador del registro de la tabla referenciado.
+
+\item 	Evento de borrado de un registro en una página de un índice: contiene la transacción a la que pertenece, el LSN del evento anterior en la transacción y el identificador del registro-índice borrado.
+
+\item 	Evento CLR de inserción de un registro en una página de un índice: contiene la transacción a la que pertenece, el LSN del evento anterior en la transacción, el identificador del registro-índice insertado y un conjunto de UndoNextLSN (modificación hecha para el soporte de transacciones anidadas, detallada más adelante en el texto).
+
+\item 	Evento CLR de borrado de un registro en una página de un índice: contiene la transacción a la que pertenece, el LSN del evento anterior en la transacción, el identificador del registro-índice borrado, el registro de la tabla al cual referenciaba  y un conjunto de UndoNextLSN (modificación hecha para el soporte de transacciones anidadas, detallada más adelante en el texto).
+
+\item 	Evento de commit de una transacción: contiene la transacción a la que pertenece, el LSN del evento anterior en la transacción y un conjunto con los identificadores de los registros bloqueados al momento del commit.
+
+\item 	Evento de rollback de una transacción: contiene la transacción a la que pertenece y el LSN del evento anterior en la transacción.
+
+\item 	Evento de fin de una transacción: contiene la transacción a la que pertenece y el LSN del evento anterior en la transacción.
+
+\item 	Evento de Begin Checkpoint: no contiene ningún parámetro. Es el evento referenciado por el registro maestro al realizarse un Checkpoint, y a partir del cual se empezará a leer el log cuando se inicia el sistema.
+
+\item 	Evento de End Checkpoint: contiene una lista con las transacciones en curso al momento del Checkpoint. Para cada transacción se toma su identificador, último LSN, estado, conjunto de UndoNextLSN y registros bloqueados al momento de la colecta. Tambien contiene una lista con las páginas que no fue
+ron persistidas. Para cada página se toma su identificador y LSN del último evento que la modificó.
+
+\end{itemize}
+
+Las modificaciones de transacciones anidadas mantienen el esquema orientado a objetos ya diseñado. Se agrega el evento que vincula al commit de una transacción hija con la  transacción padre, para que en el caso de tener que realizar un Redo o Undo de la última, también se lo haga de la primera. Este evento se llama CHILD-COMMITTED, toma el identificador de la transacción hija y el último LSN de la misma, y es insertado como un evento de la transacción padre. También se realizan los cambios mencionados en el algoritmo para que una transacción no tenga un solo UndoNextLSN sino un conjunto de ellos durante el aborto, y se irá tomando el de mayor LSN para seguir un orden cronológico inverso.\\
+
+Para agregar el soporte de Nested Top Actions, se agregó el evento sugerido de DUMMY-CLR. Cuando se comienza con una NTA dentro de una transacción, se toma nota del último LSN de la misma, y luego al finalizar, se escribe el evento DUMMY-CLR. Éste referencia a la LSN mencionada, para que si la transacción es deshecha, los eventos correspondientes a la NTA sean salteados (y no deshechos).\\ 
+
+
+\subsection{Transaction Manager}
+
+El Transaction Manager cuenta con dos mapas de transacciones. Uno asocia cada transacción con su identificador, para poder obtenerlas rápidamente a partir del mismo.
+El segundo mapa asocia cada thread con las transacciones en curso. Como se mencionó anteriormente, una lista es usada para las tomar nota de las transacciones anidadas que pueda haber.\\
+
+Existen métodos para consultar si hay una transacción en curso para un thread en particular (sin parámetros asume que se pregunta por el thread que ejecuto el método), para iniciar una transacción en un thread, para abortarla (tanto los dos métodos de aborto mencionados anteriormente, como un método para abortar una transacción hasta un savepoint dentro de la misma) o realizar commit.
+Para el inicio o fin de cada transacción, el transaction manager se comunica con el lock manager para libere los locks correspondientes (si es necesario) y con el Recovery Manager para que se escriban los eventos de fin de transacción en el mismo.\\
+
+La profundidad de las transacciones anidadas solo está limitada por la memoria del sistema.\\
+
+Estructura de una Transacción:\\
+
+\begin{itemize}
+	\item	Su identificador único: para asignarle un id único a cada transacción se utiliza un numero que va creciendo monotónicamente.
+
+\item El estado de la misma (en curso, abortada o terminada).
+
+\item	El thread donde se ejecuta la transacción.
+
+\item	Un campo timestamp de inicio que marca el momento en el cual empezó la transacción, usado para los algoritmos de Prevención de DeadLock.
+
+\item	El LSN del último evento guardado en el log correspondiente a la transacción.
+
+\item	El conjunto de UndoNextLSN. Complementando lo dicho en la bibliografía de ARIES con el soporte para transacciones anidadas, el Undo Next LSN es el LSN del próximo evento a ser leído durante el rollback de la transacción. Si durante el rollback se incluyen transacciones hijas de ésta, sus respectivos Undo Next LSN se irán guardando en este conjunto, y para el próximo evento a abortar, se elige el de mayor número.
+
+\item	La transacción padre de esta, en caso de haber una.
+
+\end{itemize}
+
+\subsection{Index Manager}
+
+Se crea un índice para cada columna de cada tabla. No existen las sentencias DDL de manejo de índices (CREATE INDEX, DROP INDEX, etc.)\\
+
+Se usa el índice correspondiente al primer elemento del WHERE que sea una igualdad. Para mayor información, consultar la API correspondiente a la ejecución de sentencias que contienen consultas (SELECT, UPDATE Y DELETE). Se recorren solo los registros obtenidos por el índice asociado, o todos los registros de la tabla en caso de no poder usar ningún índice.
+Formato de un bucket: una lista con los ID de los registros cuyo valor en la columna especificada concuerda con el hash del bucket.\\
+
+ Hay un arreglo de bits que indican los lugares de la lista libres (pueden quedar huecos en el medio de la lista, pero nos evitamos reordenar y el iterador va a ser inteligente y saltea los huecos)
+ Cuando se llena un bucket se crea otro (de la misma manera que una página).\\
+ 
+El iterador que devuelva el índice va a ser de aquellos registros cuyo valor de hash en la columna concuerde con el hash del valor especificado. O sea, Si pido aquellos registros cuya columna 1 sea igual a "valor1" y "valor2" tiene el mismo hash que "valor1" entonces los índices me van a dar no solo aquellos registros cuyo valor en la columna sea "valor1" sino también los que tienen "valor2". Una optimización podría ser guardar el valor propio en el Bucket, eso haría que solo se devuelvan los registros de valor "valor1" y aumentaría la concurrencia.\\
+
+El numero de hash va a ser modulo 8 para evitar que haya muchos buckets con un solo elemento.\\
+
+
+\subsection{Lock Manager}
+
+En la implementación del Lock Manager se usaron 3 estructuras de datos:\\
+
+Un mapa con ID de clave y un conjunto de Locks por valor:\\
+
+Este mapa permite saber qué Locks existen actualmente para un elemento dado (especificado según el ID). Pueden existir varios locks compartidos para un elemento, pero si existe un bloqueo exclusivo, va a ser único en el conjunto, salvo que haya locks compartidos pertenecientes a transacciones ancestras de aquella que tiene el bloqueo exclusivo.\\
+ 
+Un mapa con ID de clave y una cola de pedidos como valor:\\
+
+Este mapa guarda las transacciones encoladas (usando un orden FIFO) que desean adquirir un Lock para un elemento dado (especificado según el ID). De esta manera se evita inanición al querer bloquear un objeto.\\
+
+La estructura de un pedido de bloqueo que se encola contiene los siguientes datos:\\
+
+\begin{itemize}
+	\item La transacción que realiza el pedido.
+\end{itemize}
+
+\begin{itemize}
+	\item El thread perteneciente a esa transacción ( y que será suspendido mientras no se consiga bloquear el objeto)
+\end{itemize}
+
+\begin{itemize}
+	\item Valor que indica si el bloqueo deseado es exclusivo o compartido.
+\end{itemize}
+
+Un mapa por cada Transacción con ID de clave y Lock como Valor:\\
+
+Este mapa guarda los Locks adquiridos por cada transacción. Es usado para obtener un acceso más rápido a los Locks de la misma, y para mantener la consistencia del sistema de bloqueos.
+Cuando se desea bloquear un objeto puede ocurrir que:\\
+
+\begin{enumerate}
+	\item	No se encuentre bloqueado: En este caso, se procede al bloqueo efectivo del elemento. En caso de haberse realizado un bloqueo compartido, el administrador comprueba si la cola de conexiones en espera para bloquear el mismo elemento no está vacía, y en ese caso de toma la primer conexión en espera y le avisa que proceda con su bloqueo (el cual va a ser exitoso en caso de ser un bloqueo compartido y va a volver a esperar en caso de ser uno exclusivo).
+	
+\item Se encuentre ya bloqueado por la misma conexión (ya sea de la misma transacción o de alguna ancestra): El bloqueo se deja tal cual estaba, salvo el caso que hubiera un bloqueo compartido y ahora se desee uno exclusivo. Entonces se procederá a hacer una actualización del Lock, pero sólo después de que otras conexiones que también tuvieran bloqueos compartidos sobre el mismo objeto los hayan liberado.
+		
+\item Se encuentra ya bloqueado por otra transacción (una o varias): Aquí de nuevo se divide en casos si se desea un bloqueo compartido o exclusivo.
+
+	\begin{enumerate}
+	\item  Si se desea un bloqueo compartido y los bloqueos existentes también son compartidos:
+	Si no existe ningún pedido de bloqueo exclusivo encolado, entonces se realiza el bloqueo y se 			agrega al conjunto de Locks de ese ID. Si existe alguno, éste pedido se encola al final, esto es 		para que el pedido de bloqueo exclusivo que se encuentra encolado no sufra de inanición.
+
+
+	 \item Si el bloqueo existente es exclusivo, se suspende la transacción hasta que tal bloqueo sea 					liberado. Cabe notar que por la cola FIFO, no va a llegar ningún pedido de bloqueo en el 						 medio, salvo que el mismo sea una actualización de algún bloqueo existente compartido al 					 modo exclusivo.
+
+
+		\item  Si se desea un bloqueo exclusivo, entonces se encola el pedido. Se espera hasta que todos 			los 	Locks sobre el elemento sean liberados, así como que ocurran todos los bloqueos encolados 		con	anterioridad.
+
+	\end{enumerate}
+
+
+\end{enumerate}
+
+
+Al desbloquear un objeto, si lo que se tenía sobre tal objeto era un bloqueo exclusivo (se consulta el mapa local para cada conexión para averiguar cuál era el Lock sobre el objeto), entonces luego de desbloquearlo se consulta la cola de espera de tal elemento para que la siguiente conexión proceda a la adquisición del Lock sobre el objeto.\\
+
+Si se intenta desbloquear un elemento no bloqueado por la conexión, se lanzará una excepción.
+Para poner en espera a las conexiones que desean adquirir un bloqueo sobre un elemento ya bloqueado, se utilizan los métodos de suspensión de Threads provistos por Java 1.5.\\
+
+También se ha implementado un decorador (Del patrón de diseño Decorator \cite{GAMMA95} del administrador el cuál guarda en un registro cada vez que se desea bloquear o desbloquear un elemento. Este registro luego sirve para mostrar como queda el Historial de eventos de bloqueo durante un determinado tiempo.\\
+ 
+Cuando se le pide una tabla al Catálogo, éste la decora con una implementación que realiza el bloqueo y desbloqueo de elementos de manera automática, evitando agregar esta complejidad al ejecutor. Antes de ejecutar las operaciones de inserción, actualización y eliminación, se bloquea el elemento a modificar de manera exclusiva, y si no existe ninguna transacción en curso, se desbloquea luego de la operación.\\
+ 
+En caso de haber una transacción activa, los bloqueos y desbloqueos se realizaran según el nivel de aislamiento correspondiente:\\
+
+\begin{itemize}
+	\item READ UNCOMMITTED: No se realiza un bloqueo compartido antes de realizar una lectura. Se realizan bloqueos exclusivos antes de modificaciones o inserciones. Estos bloqueos son liberados cuando se termina la transacción (o delegado a la transacción padre si existe).
+
+	\item READ COMMITTED: Se realizan bloqueos compartidos antes de realizar lecturas. Estos son liberados inmediatamente luego de la misma. Se realizan bloqueos exclusivos antes de modificaciones o inserciones. Estos bloqueos son liberados cuando se termina la transacción (o delegado a la transacción padre si existe).
+\end{itemize}
+
+\begin{itemize}
+	\item REPEATABLE READ: Se realizan bloqueos compartidos antes de realizar lecturas y exclusivos antes de modificaciones o inserciones. Todos los bloqueos son liberados cuando se termina la transacción (o delegado a la transacción padre si existe).
+\end{itemize}
+
+\begin{itemize}
+	\item SERIALIZABLE: Ídem anterior, pero además, en una lectura se bloquea el índice correspondiente o toda la tabla en caso de no utilizarse ninguno, para evitar ``lecturas fantasmas''. 
+\end{itemize}
+
+En todos los niveles, al realizar inserciones se bloquean todos los índices de las columnas de la tabla (o en caso de modificaciones, los índices afectados), para que las lecturas de nivel SERIALIZABLE sepan sobre estas modificaciones o inserciones y se eviten las mencionadas ``lecturas fantasmas''.\\
+
+Se han implementado distintos algoritmos de prevención, como ser Wound - Wait, Wait - Die, Caution Waiting, y una implementación simple que indica que nunca ocurre DeadLock. Al levantar el servidor se puede elegir qué algoritmo será utilizado. Por omisión se toma Caution Waiting.\\
+
+Algunas de estas implementaciones utilizan la fecha de comienzo de las distintas transacciones involucradas para decidir cuál va a ser la víctima.\\
+
+\subsubsection{Deadlock}
+
+Para el tratamiento de DeadLocks, se optó por usar los algoritmos de prevención en vez de detección una vez que ocurrieron. Esto es para mantener la simplicidad del trabajo. Como trabajo futuro se podría implementar un algoritmo basado en deadlock detection. Se diseñó una interfaz, la cual es usada por el administrador cada vez que se desea bloquear un elemento, para verificar si puede haber un conflicto entre la transacción que desea bloquear con aquellas dueñas de Locks sobre el elemento en cuestión.

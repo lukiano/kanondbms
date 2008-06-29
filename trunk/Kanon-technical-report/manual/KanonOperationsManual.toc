@@ -1,0 +1,6 @@
+\select@language {spanish}
+\contentsline {section}{\numberline {1}Requisitos del Sistema}{4}
+\contentsline {section}{\numberline {2}Ejecuci\'on de los programas}{4}
+\contentsline {section}{\numberline {3}Par\'ametros de configuraci\'on disponibles}{4}
+\contentsline {section}{\numberline {4}Arquitectura, dise\~no y especificaci\'on del cliente}{5}
+\contentsline {section}{\numberline {5}Sentencias SQL soportadas}{7}

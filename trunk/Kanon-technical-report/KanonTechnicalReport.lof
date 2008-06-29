@@ -1,0 +1,10 @@
+\select@language {spanish}
+\contentsline {figure}{\numberline {1}{\ignorespaces Arquitectura del modelo Cliente / Servidor}}{10}
+\contentsline {figure}{\numberline {2}{\ignorespaces Arquitectura del Servidor Kanon}}{11}
+\contentsline {figure}{\numberline {3}{\ignorespaces Arquitectura del Buffer Manager de Kanon}}{13}
+\contentsline {figure}{\numberline {4}{\ignorespaces Arquitectura del Recovery Manager de Kanon}}{16}
+\contentsline {figure}{\numberline {5}{\ignorespaces Transacciones anidadas seg\'un el tiempo de ejecuci\'on}}{20}
+\contentsline {figure}{\numberline {6}{\ignorespaces Transacciones anidadas como operaciones}}{21}
+\contentsline {figure}{\numberline {7}{\ignorespaces Uso de savepoints}}{22}
+\contentsline {figure}{\numberline {8}{\ignorespaces Modelo de Two phase locking}}{23}
+\contentsline {figure}{\numberline {9}{\ignorespaces Implementaci\'on del Buffer Manager de Kanon}}{29}

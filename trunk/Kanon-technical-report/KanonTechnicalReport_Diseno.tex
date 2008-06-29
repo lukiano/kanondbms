@@ -1,0 +1,325 @@
+\newpage
+
+\section{Diseño} 
+\subsection{Modelo propuesto}
+
+El sistema sigue el protocolo Cliente - Servidor, donde toda la complejidad del motor de base de datos se encuentra en el servidor. El cliente es una aplicación liviana encargada de la comunicación con el usuario, enviando los pedidos de consultas al servidor, esperando por el resultado y mostrando al mismo por pantalla.\\
+
+\begin{figure}[h]
+		\centering
+		\includegraphics[scale=0.8]{img/ClienteServerArchitecture.png}
+		\label{fig:ClienteServerArchitecture.png}
+		\caption{Arquitectura del modelo Cliente / Servidor}
+\end{figure}
+
+
+
+Este modelo permite una mejor abstracción y separación de la funcionalidad propia del motor, con aquella encargada de la interfaz al mundo exterior. Siguiendo un esquema de envío de mensajes, ambos programas pueden ejecutarse tanto en la misma máquina como en computadoras distintas, sin perder ninguna clase de utilidad.\\
+
+\subsection{Arquitectura del servidor}
+
+Teniendo en cuenta los fines académicos del trabajo, se decidió separar cada componente del servidor en módulos bien diferenciados e independientes, tratando de maximizar la cohesión y tener un bajo acoplamiento. Cada modulo respeta una interfaz, la cual es usada por aquellos que lo acceden, desligándose así de cómo está implementado cada uno.
+Esto permite poder modificar a futuro la implementación de un modulo sin que ello afecte a los restantes, mientras se respeten las interfaces establecidas en el sistema.
+El enfoque esta basado en un diseño orientado a objetos, haciendo uso de diferentes patrones de diseño para poder facilitar el entendimiento de cada modulo y proveer de soluciones estándar. Cada objeto tiene un propósito específico y diferenciable, lo que permite un mayor entendimiento del desarrollo de los módulos y funcionamiento del motor.\\
+
+En la figura 2 muestran los módulos e interrelaciones existentes en el sistema:\\
+
+\begin{figure}[h]
+		\centering
+		\includegraphics[scale=0.6]{img/arquitectura.png}
+		\label{fig:arquitectura.png}
+		\caption{Arquitectura del Servidor Kanon}
+\end{figure}
+
+A continuación se explican con mayor detalle aquellas componentes que tienen mayor relevancia con el objetivo de este trabajo. En cada una se puntualiza la trascendencia que tienen los algoritmos de ARIES sobre la misma, enfocando su funcionalidad principal en la sección del Recovery Manager.\\
+
+
+\subsection{Disk Space Manager}
+
+El DiskSpace Manager es el encargado de guardar las páginas en un medio de almacenamiento persistente, en nuestro caso mediante archivos en disco duro dentro de un directorio ya preestablecido.\\ 
+
+Las páginas se guardan en formato binario. La elección del mismo se debe a:\\
+
+\begin{itemize}
+	\item La necesidad de implementar índices, o sea que las páginas no sólo contienen información de las tablas.
+\end{itemize}
+
+
+\begin{itemize}
+	\item Por ARIES, ya que en principio, el algoritmo guarda en los eventos de log aquellos cambios de los registros de las tablas a nivel de bytes.
+\end{itemize}
+
+
+\begin{itemize}
+	\item Por similitud a un motor de base de datos real.
+\end{itemize}
+
+El formato utilizado en un principio había sido XML, y estaba justificado por el hecho de tener un formato más legible sin necesidad de transformación alguna. Esto es, se podía abrir una página, con cualquier visor de texto, y saber cómo era su contenido; útil para fines académicos. El formato XML también fue usado en el log de eventos para la recuperación del sistema, el cual fue cambiado por el log de ARIES.\\
+
+También hay que destacar que al no realizar la conversión XML, el Disk Manager toma una lógica mucho más simple, pues sólo debe estampar el arreglo de bytes representantes de una página provistos por el Buffer Manager en un archivo en disco. Y viceversa para la lectura.\\
+
+Este manager se completa con métodos de creación y borrado de página:
+
+\begin{itemize}
+	\item Crear de una nueva página. A partir de las páginas existentes se obtiene cuál será el número de la nueva página. La implementación está optimizada para tablas que no necesitan ningún orden en particular sobre sus registros.
+\end{itemize}
+ 
+\begin{itemize}
+	\item Borrar una página. Borra el archivo de la página del disco persistente.
+\end{itemize}
+
+
+
+\subsection{Buffer Manager}
+
+Para el manejo de las páginas en el Buffer Manager se utiliza el esquema \textbf{steal / no-force}. Con \textbf{no-force}, al no requerir que la página se guarde en disco estable para cada commit, esta escritura se puede realizar una vez luego que todas las transacciones hayan modificado la página, reduciendo considerablemente la cantidad de E/S. Esta mejora se combina con el enfoque \textbf{steal}, el cual permite que una página que haya sido modificada por una transacción en curso, sea guardada en disco y eliminada de la memoria (para hacer lugar a otra página), aumentando la capacidad de la memoria virtual del motor. Luego si esos cambios deben ser deshechos, entrará en juego el proceso de rollback propuesto por ARIES, leyendo el archivo de log para revertir las modificaciones.\\
+
+Otra posibilidad más simple de implementar es el esquema \textbf{no-steal / force}, pero el mismo posee determinadas desventajas. \textbf{No-steal }asume que todas las páginas modificadas por las transacciones en curso pueden estar fijas en el pool de páginas del Buffer Manager lo cual es una asunción no realista, pues limita la cantidad de transacciones que se pueden estar ejecutando de manera concurrente y el tamaño de las mismas. Con \textbf{force}, si una misma página es modificada por muchas transacciones seguidas, ésta se escribe en disco a medida que las transacciones van haciendo commit.\\
+
+
+\begin{figure}[h]
+		\centering
+		\includegraphics[scale=0.4]{img/BufferManagerDiseno.png}
+		\label{fig:BufferManagerDiseno.png}
+		\caption{Arquitectura del Buffer Manager de Kanon}
+\end{figure}
+
+Otro punto importante tratado por ARIES es el control de acceso a las páginas. Las páginas disponen de tres tipos de bloqueos:\\
+
+\begin{itemize}
+	\item \textbf{pin}:
+Sirve para que el algoritmo de remoción utilizado por el Buffer Manager no deseche una página que esté siendo usada por una o varias transacciones. Cuando una transacción necesita utilizar una página, la fija en el slot. En este trabajo, el manejo de pines corre por parte del submódulo Pin Manager. Para cada página un contador indica por cuántas transacciones está siendo usada. Se incrementa al acceder y se decrementa cuando es liberada.
+
+\item \textbf{latch}:
+Sirve para insertar un nuevo registro y para que el RecLSN se mantenga ordenado con respecto a las operaciones sobre la página. Esa variable apunta al último evento del log de ARIES que realizó una modificación en la página. También, por simplicidad, va a estar representado por un Latch Manager propio.
+Se obtiene un latch al modificar la página (insert, update o delete), y se libera luego de escribir la entrada del evento en el log de ARIES. No se obtiene ningún latch al leer.
+
+\item \textbf{lock}:
+	Bloqueo estándar de páginas hecho por el Lock Manager principal. Puede ser utilizado para 				optimizaciones (si una transacción tiene bloqueados una gran porcentaje de registros pertenecientes a una misma página, le conviene bloquear toda la página).
+En este trabajo este tipo de bloqueo no va a ser realizado.
+
+\end{itemize}
+ 
+
+La documentación de ARIES muestra los pasos a seguir para evitar deadlock entre lock de registros y latch de páginas (esto aplica también a las páginas de los índices):\\
+
+\begin{enumerate}
+
+	\item \textbf{update / delete}:
+Se bloquea el registro de manera exclusiva y luego se obtiene un latch la página. Si alguien ya tenia el latch de esa página, por el funcionamiento del algoritmo, se sabe que no va a pedir el lock de algún registro bloqueado antes de liberar tal latch. 
+
+\item \textbf{insert}:
+Se obtiene un latch de la página y se obtiene el ID del nuevo registro. Entonces, se procede a bloquear el ID de manera exclusiva para insertar el registro. Este bloqueo es CONDICIONAL. Si falla, se libera el latch y se intenta bloquear el ID de manera exclusiva INCONDICIONAL. Una vez que se obtenga ese lock, se pide de nuevo un latch de la página y se verifica que ese ID no haya sido usado (justo antes de bloquearlo INCONDICIONAL). Si fue usado, se libera el lock de tal ID y se vuelve repetir toda la operación.
+
+\end{enumerate}
+
+Cuando se desea acceder o modificar una tabla, se le pide al Buffer Manager que traiga las páginas correspondientes a memoria, en caso de no encontrase allí con anterioridad. Estas páginas serán marcadas mientras se esté operando con ellas y luego se liberarán para que sean removidas en caso de necesitar más memoria.\\
+
+El Buffer Manager contiene métodos para obtener una página, liberarla, crearla, borrarla, saber si se encuentra en memoria y guardar las páginas que fueron modificadas. Para la mayoría de ellos, luego de realizar las acciones necesarias se llama al Disk Space Manager para que persista los resultados.\\
+ 
+
+\subsection{Ejecutor}
+
+El Ejecutor tiene como objetivo, llamar al analizador para descomponer la sentencia SQL en partes más fáciles de procesar; luego realizar la ejecución y devolver el resultado de la consulta propiamente dicha. Esto se realiza desde el Servidor, quien obtiene las sentencias que son ejecutadas por el cliente.\\
+
+El hecho de existir manejo de índices, hace que la ejecución de cláusulas WHERE (tanto en el select, update como delete) intente acceder por ellos. En el caso de no ser posible, entonces recién ahí se procede a recorrer toda la tabla.\\
+ 
+Por simplicidad, no se contemplan joins (no se realiza producto cartesiano).\\ 
+
+Las sentencias que soporta la aplicación son las siguientes:\\
+
+\texttt{
+\begin{flushleft}
+       INSERT INTO tabla (col1, col2...) VALUES (valor1, valor2...);\\
+       INSERT INTO tabla (col1, col2...) SELECT...;\\
+       UPDATE tabla SET col1 = expresion WHERE expresionWhere;\\
+       SELECT col1, expresion1... FROM tabla WHERE expresionWhere;\\
+       DELETE FROM tabla WHERE expresionWhere;\\
+       CREATE TABLE tabla (col1 NUMERIC/CHAR(XX)...);\\
+       DROP TABLE tabla;\\
+       BEGIN TRANSACTION;\\
+       COMMIT TRANSACTION;\\
+       SAVEPOINT nombre;\\
+       ROLLBACK nombre;\\
+       ROLLBACK TRANSACTION;\\
+       CRASH;\\
+       CHECKPOINT;\\
+       ISOLATION nivelAislamiento;\\
+\end{flushleft}
+}
+
+El nivel de aislamiento puede ser Read Uncommited, Read Commited, Repeatable Read y Serializable. Más información sobre los mismos aparece en la sección correspondiente al Lock Manager.\\
+
+
+\subsection{Recovery Manager}
+
+El Recovery Manager es el modulo encargado de proveer robustez a una base de datos. Su función consiste en darle las propiedades de atomicidad y durabilidad a las transacciones del motor \cite{RAMA03}.\\ 
+
+Entre las técnicas disponibles para realizar este cometido, las más conocidas son Shadow Paging \cite{SHAWIK}, \cite{RAMA03} y Write Ahead Logging \cite{WALWIK}, \cite{RAMA03}. Uno de los objetivos de este trabajo es mostrar el funcionamiento de un sistema de recuperación basado en los algoritmos de ARIES \cite{ARIES}. Estos utilizan una estrategia WAL, la cual es menos costosa en términos de memoria.
+
+\begin{figure}[h]
+		\centering
+		\includegraphics[scale=0.6]{img/RecoveryManagerDiseno.png}
+		\label{fig:RecoveryManagerDiseno.png}
+		\caption{Arquitectura del Recovery Manager de Kanon}
+\end{figure}
+
+Cada evento que ocurre en la base de datos, se guarda en un log, indicando qué evento es y parámetros asociados al mismo para poder rehacer dicha operación o deshacerla en caso de ser necesario. El archivo de log es de formato creciente, y debe ser guardado en medio persistente cada vez que una transacción hace commit, o cuando se realiza un checkpoint de la base de datos \cite{RAMA03}.\\
+
+Cuando se modifica una página, ya sea de una tabla o de un índice, el estándar de ARIES recomienda que se guarde un evento indicando qué página fue modificada y cuáles bytes cambiaron dentro de la misma. Teniendo en cuenta los fines académicos de este proyecto, se decidió separar la operación de modificación en valores más lógicos. Se indica si se trata de la inserción de un registro, modificación o borrado del mismo, y de la misma manera para los registros de los índices.  Esto permite conocer mejor el funcionamiento del motor, ya que una operación de inserción se verá reflejada en el log con un evento de inserción, junto al identificador del nuevo registro y los valores correspondientes a cada columna de la tabla afectada (y el agregado de los registros correspondientes a cada índice asociado).\\
+
+Siguiendo las referencias de ARIES, cada evento tiene un identificador propio, el cual es basado en su posición dentro del archivo de log. Luego, cada transacción toma nota del último evento realizado, y cada página sabe el identificador del último evento que realizó una modificación sobre la misma. Cuando una transacción realiza commit se toma de este hecho con un evento de commit, y cuando termina (ya sea por commit o un aborto), se marca una finalización de ésta en el log. Cuando se realiza un aborto de una transacción, se deshacen los cambios hechos en orden inverso, y los eventos CLR toman de esto, por si luego hay que volver a deshacer esos cambios.\\
+
+Cuando ocurre una falla y se cae el sistema, al volver a iniciarse, es necesario que aquellas modificaciones que no fueron guardadas de manera persistente sean rehechas, para que no se pierdan estos cambios. También es necesario que las transacciones que se encontraban en curso durante la caída y no hicieron commit deshagan sus cambios, para que parezca como si nunca hubieran existido. 
+Para esto ARIES propone que la recuperación se divida en tres fases: ANALISIS, UNDO y REDO y explica los pasos a seguir en cada fase. Este modulo realiza la recuperación de la misma manera, y se detalla cuando ocurre cada paso. Sin embargo, se decidió desviarse de la implementación procedural propuesta, por una orientada a objetos.\\
+
+Para asegurarse que los cambios hechos por las transacciones estén en una memoria persistente, existe el concepto de Checkpoint. Éste fuerza la escritura del log a disco así como de aquellas páginas modificadas desde la última vez que fueron escritas. Las bases de datos suelen tomar un Checkpoint de manera periódica. Pero para este motor se decidió no hacer eso, para poder ver el funcionamiento del sistema de recuperación en caso de una falla. Sin embargo, si se agregó la funcionalidad de poder realizar un Checkpoint de manera manual, y también de poder forzar una caída del sistema de manera manual (ambas con sentencias SQL propias de esta base de datos).\\
+
+De la misma manera que en los demás módulos, se agregó el soporte para savepoints y transacciones anidadas. Las modificaciones para soportar a esta última se realizaron según los algoritmos de ARIES/NT \cite{ARIESNT}. Como los savepoints son entidades lógicas de una transacción, no fue necesario ningún cambio al sistema de recuperación para soportarlos.\\
+
+Hay eventos que pueden ocurrir dentro de una transacción para los que es deseable que no se deshagan, aunque la misma sea abortada. Para realizar esto se implementaron las Nested Top Actions \cite{ARIES} cuya funcionalidad es justamente ésta y en ARIES se explica qué cambios hay que cometer para soportarlas.\\
+
+
+
+
+\subsection{Transaction Manager}
+
+Este modulo tiene la finalidad de administrar la ejecución de todas las transacciones en curso. 
+Tiene una estructura la cual almacena todas las transacciones que se están corriendo sobre el Server. Para un cliente dado se puede ver si actualmente tiene una transacción en curso. Ya que por cada cliente, se va a tener una thread del servidor ejecutando sus operaciones. Las operaciones de la transacción de un cliente no interfieren con las transacciones de los otros clientes.\\
+
+Una transacción corresponde a un thread, éstas no pueden ser suspendidas y resumidas en otro thread.\\
+
+El servidor ejecuta concurrentemente transacciones de cada conexión con un cliente. Cada conexión se asocia a un thread del servidor y para cada uno de estos threads puede haber una transacción en curso o ninguna.\\
+
+Para cada sentencia (línea de comando que envía el cliente) se sabe si esta debe ser corrida dentro de una transacción o no. Por ejemplo, las instrucciones DML deben serlo, pero para la instrucción que realiza un checkpoint no es necesario. Luego, aquellas que lo necesiten van a ser tratadas por el ejecutor como una transacción propia si no existía ninguna en curso.\\
+
+Se tomó esta decisión para que en casos donde una instrucción simple trabaje sobre un conjunto de datos, efectúe todas sus acciones o ninguna.Por ejemplo al hacer un update con un set, se van a modificar todos los registros en cuestión o ninguno.\\
+
+Lo que hace el ejecutor es fijarse si hay una transacción en curso, cuando recibió la sentencia, si no la hay la crea ( a lo que llamamos Transacción Automática) , ejecuta la sentencia y luego se fija en un flag si la transacción donde ejecuto la instrucción es automática o no, si lo es tiene que finalizarla.
+
+Es posible crear transacciones explicitas del cliente cuando se envíe un Begin Transaction, seguido por una serie de sentencias y finalizando con un Commit o Rollback, y también se tendrán transacciones implícitas cuando el cliente envíe comandos simples como Insert … el ejecutor se va a encargar de ejecutar esta sentencia como Begin Transaction, luego Insert ... y finalizara con un Commit (o un Rollback en caso de haberse lanzado alguna excepción).\\
+
+Las transacciones tienen un número como identificador, el cual va siendo incrementado atómicamente. Además, al inicio del sistema, se verifica el log para empezar con el siguiente valor al numero mas alto de las transacciones del log para que los eventos de las nuevas transacciones no se confundan con las ya grabadas.\\
+
+Las propiedades ACID de las transacciones se obtienen de la siguiente manera:\\
+
+\begin{itemize}
+	\item Atomicidad: Cuando ocurre un error o se desea abortar la transacción, el Recovery Manager basado en ARIES, a través de su log, se encarga de realizar el rollback y restaurar las modificaciones hechas por cada sentencia dentro de la transacción a su estado anterior.\\
+
+	\item Consistencia: Como se comenta en \cite{RAMA03} en la sección 18.1.1, los usuarios del sistema son responsables de mantener la consistencia de las bases de datos afectadas. Este motor no soporta restricciones de integridad, como claves primarias (o unicidad en los valores de las columnas) y claves foráneas.\\
+
+	\item Aislamiento: El Lock Manager se encarga de las garantías de serialización de las transacciones que se ejecutan de manera concurrente, y también se encarga de los bloqueos para aquellas que desean acceder o modificar objetos (registros, tablas) al mismo tiempo.\\
+
+	\item Durabilidad: Así como con la atomicidad, el Recovery Manager se encarga de la recuperación de las transacciones activas al momento de ocurrir una caída del sistema. También se encarga de rehacer las acciones de aquellas transacciones cuyos cambios no fueron guardados en un almacenamiento no volátil.\\
+\end{itemize}
+
+En la sección del Lock Manager se comenta sobre el interlineado de transacciones y el Schedule formado por las mismas.\\
+
+En vistas de dar una mayor profundidad a los temas de transacciones, se han agregado dos extensiones de ARIES para proveer de mayor funcionalidad a este motor, sin dejar de lado los fines educacionales del mismo:\\
+
+\subsubsection{Transacciones anidadas}
+En \cite{ARIESNT} se comenta como dar soporte de transacciones anidadas a un sistema de recuperación basado en ARIES, indicando los cambios en el sistema de log y en las tablas de transacciones, se decidió realizar tales cambios en este motor académico para que futuros interesados puedan conocer funciones avanzadas de una base de datos concurrente. Los cambios en el Transaction Manager implican que para cada thread, no existe una referencia a una transacción, sino una lista de transacciones, la lista se encuentra ordenada de la transacción de mas alto nivel a aquella mas reciente y profunda en el anidamiento.\\
+
+Cuando se crea una transacción anidada, ésta hereda el nivel de aislamiento de la transacción padre (y claro está, se ejecutan en el mismo thread).\\
+
+El método de abortar la transacción fue reemplazado por dos métodos, uno aborta la última transacción (La más anidada), volviendo a la transacción padre, y el otro aborta todas las transacciones del thread. El método de commit realiza la operación solo para la transacción mas anidada, y luego el log se encarga de unir esa operación de commit con la transacción padre, por si esta luego realiza un rollback. A la transacción padre se le actualiza su último LSN con esta operación de commit de la hija.\\
+
+En las secciones del Lock Manager y Recovery Manager se comentan los cambios hechos para que ambos soporten transacciones anidadas.\\
+
+
+
+\begin{figure}[h]
+		\centering
+		\includegraphics[scale=0.4]{img/TrxAnidadas.png}
+		\label{fig:TrxAnidadas.png}
+		\caption{Transacciones anidadas según el tiempo de ejecución}
+\end{figure}
+
+Cabe destacar que cuando se crea una transacción hija, la transacción padre es suspendida, pues todas las sentencias nuevas del thread corresponderán a la transacción hija hasta que esta aborte o haga commit. Luego, no es necesario ocultar los cambios de la transacción hija al padre pues éste se encuentra suspendido, y una transacción no puede tener más de una transacción hija en el mismo instante.\\
+
+\begin{figure}[h]
+		\centering
+		\includegraphics[scale=0.6]{img/TrxOperaciones.png}
+		\label{fig:TrxOperaciones.png}
+		\caption{Transacciones anidadas como operaciones}
+\end{figure}
+
+\subsubsection{Savepoints}
+
+Un savepoint permite establecer un punto significativo dentro de una transacción y permite deshacer los cambios hechos desde ese punto en adelante (siempre y cuando no se haya terminado la misma). El uso de estos savepoints está expuesto a la interfaz de usuario en forma de sentencias como se muestran en el apartado del analizador.\\
+
+Para el usuario, los savepoints toman nombres amistosos. Luego estos se asocian con el ultimo LSN (evento de log, ver apartado de ARIES) de la transacción en curso. Si establece un savepoint con un nombre ya tomado, el anterior es borrado. Entre distintas transacciones puede haber savepoints de igual nombre. Esto incluye transacciones anidadas, pues no se puede volver a un savepoint de una transacción padre (No se encuentra soportado).\\
+
+%trxSavePoints
+
+\begin{figure}[h]
+		\centering
+		\includegraphics[scale=0.6]{img/trxSavePoints.png}
+		\label{fig:trxSavePoints.png}
+		\caption{Uso de savepoints}
+\end{figure}
+
+Aprovechando la capacidad de savepoints, cuando se ejecutan sentencias dentro de una transacción explícita, antes de cada una se marca un savepoint de manera automática, así si ocurre una excepción en la ejecución de la misma, se realiza un rollback hasta ese savepoint. Esto excluye excepciones por dead lock, pues ahí se abortan todas las transacciones del thread, para liberar los locks que tuvieran tomados.\\
+
+
+
+\subsection{Index Manager}
+
+Este modulo fue creado en vistas de mejorar la concurrencia entre tran-sacciones así como la performance de las sentencias que consultan las tablas.\\
+
+La finalidad es que cuando se realice una consulta con una expresión donde se iguale una columna con un valor, se va a poder usar el índice correspondiente de la columna. Luego se van a recorrer los registros de la tabla que existan en ese índice, evitando la necesidad de recorrer todos los registros, y poder lograr mayor concurrencia en el caso que hubiera otra transacción que realice otra consulta utilizando una expresión tal que los registros representados en su índice no se encuentren compartidos con la primer transacción (ejemplo, una expresión donde se iguala la misma columna pero con otro valor tal que su número de hash es distinto).\\
+
+Como los datos de las tablas no se encuentran ordenados, éstos índices son del tipo \textit{unclustered}, y como existe una entrada para cada registro de la tabla (según el hash que corresponda), también son del tipo \textit{densos}.\\
+
+Es necesario mencionar que este motor no tiene implementadas claves primarias ni restricciones de unicidad en las columnas de una tabla. Suelen ser conocidos entonces como índices secundarios. En el capítulo 8.4 de \cite{RAMA03} se explican y comparan las diferentes propiedades que puede tener un índice.\\
+
+Para cada índice se utilizan buckets con overflow. (Explicación de índices hash con overflow en el capítulo 10 de \cite{RAMA03}). Todos los valores posibles de la columna son asignados a un numero hash, y se agrega una entrada en el bucket que corresponda a tal par [columna, hash].
+ Al no ser dinámico se puede dar el caso que una entrada de hash tenga muchos buckets, pero aun así va a ser mas concurrente que recorrer toda la tabla. Además, el objetivo del trabajo práctico es mostrar una implementación y funcionamiento del sistema ARIES. Estos índices son solo un agregado para mejorar un poco la concurrencia y proveer nivel aislamiento serializable sin tener que bloquear toda la tabla.\\
+
+El índice hash también es útil para las tablas del catalogo, pues cuando se desea obtener una tabla no es necesario recorrer toda la tabla de tablas buscándola.\\
+
+El sistema de ARIES nos va a permitir que los índices sean tan transaccionales como las tablas comunes. Se agregaron los eventos (lógicos) de actualización de índices en el log para realizar REDO y UNDO de los mismos en caso de ser necesario, y se agregó al sistema de Lock Manager bloqueo sobre los índices (ver más detalles en la sección correspondiente de dicho administrador). Por último, cuando se modifica algún Bucket, de la misma manera que las páginas, se toma un Latch para que darle orden a las modificaciones concurrentes.\\
+
+\subsection{Lock Manager}
+
+Este modulo tiene como objetivo administrar los bloqueos tanto de lectura como de escritura. Se utiliza un bloqueo pesimista \cite{RAMA03} en vistas de mostrar su diseño, implementación y uso de manera educativa, y por ser más simple que el mantenimiento de versiones que suelen tener los bloqueos optimistas.\\
+
+En este diseño se tomo la decisión de implementar el protocolo de 2PL, sobre el esquema RLOCK / WLOCK, o sea sobre bloqueos ternarios. En principio se pensó tomando en cuenta las condiciones de los capítulos 18 y 19 de \cite{RAMA03}. Tiene soporte para bloqueo de granularidad fina (a nivel de registro) lo que permite una mayor concurrencia entre transacciones.\\
+
+\begin{figure}[h]
+		\centering
+		\includegraphics[scale=0.6]{img/LockManager.png}
+		\label{fig:LockManager.png}
+		\caption{Modelo de Two phase locking}
+\end{figure}
+
+Se han implementado los cuatro niveles estándar de aislamiento transaccional: READ UNCOMMITTED, READ COMMITTED, REPEATABLE READ y SERIALIZABLE \cite{SQL92}, \cite{RAMA03}. El bloqueo de elementos dentro de una transacción se adhiere al protocolo 2PL estricto para los primeros dos niveles \cite{S2PLWIK} y al protocolo 2PL riguroso para los últimos dos niveles \cite{R2PLWIK}. Según se muestra en \cite{BERNTS} y en \cite{FRACCR}, se mantiene la correctitud semántica, y los distintos niveles muestran un tradeoff entre performance (menos bloqueos / mayor concurrencia) e inconsistencias posibles en el aislamiento de las transacciones.\\
+
+El Lock Manager está diseñado de la siguiente manera:\\
+
+Su estructura cuenta con métodos para bloquear un elemento (se utiliza el ID del elemento), para desbloquearlo, y para saber si un elemento se encuentra bloqueado.\\
+
+Cuando se desea bloquear un elemento también se especifica si se desea un bloqueo exclusivo o compartido. En nuestro esquema, el bloqueo exclusivo es utilizado para bloquear objetos para su posterior escritura, y el bloqueo compartido para bloquear elementos que van a ser leídos.
+Estos métodos se ejecutan de manera sincronizada. Esto es, sólo una transacción (thread/conexión) puede estar ejecutándolo a la vez. Fue necesario pues las estructuras donde se guardan los Locks son compartidas por todas las conexiones.\\
+
+Al igual que con el resto de los módulos relacionados con transacciones, éste administrador fue luego modificado para dar soporte a transacciones anidadas y Savepoints.\\
+
+Cuando se aborta hasta un Savepoint, se desean liberar aquellos Locks obtenidos luego del mismo. Para ello, se conoce cuál fue el último LSN antes de crear un Lock en la transacción, y existe un método que libera aquellos Locks mayores al LSN relacionado con el Savepoint.\\
+
+Cuando se crea una transacción hija, esta hereda los locks de sus ancestros. Cada Lock guarda qué transacción lo creó. Pero el algoritmo para saber si un elemento ya se encuentra bloqueado por una transacción itera también por aquellos pertenecientes a transacciones ancestras. Cuando una transacción hija es abortada, todos sus locks son liberados de la misma manera que fuera una de nivel alto, pero cuando realiza commit, todos sus locks no son liberados sino delegados a la transacción padre. Luego, a medida que vayan haciendo commit se irán pasando hasta llegar a la de más alto nivel.\\
+
+Un caso especial es cuando una transacción ancestra tiene un Lock compartido sobre un elemento, y la descendiente desea actualizar ese Lock a uno exclusivo (para realizar una modificación o borrado del elemento). En este caso ambos Locks se mantienen en las estructuras, para que el bloqueo exclusivo sea liberado en caso de un aborto, o sea delegado al padre en caso de commit. Si el padre era quien poseía el Lock compartido, el mismo será actualizado a exclusivo (como ya había un bloqueo exclusivo, se sabe que ninguna otra transacción posee bloqueos compartidos sobre el elemento afectado).\\
+
+\subsubsection{Deadlock}
+
+Para el tratamiento de DeadLocks, se optó por usar los algoritmos de prevención en vez de detección una vez que ocurrieron. Esto es para mantener la simplicidad del trabajo. Como trabajo futuro se podría implementar un algoritmo basado en deadlock detection. Se diseñó una interfaz, la cual es usada por el administrador cada vez que se desea bloquear un elemento, para verificar si puede haber un conflicto entre la transacción que desea bloquear con aquellas dueñas de Locks sobre el elemento en cuestión.\\
+
+
+
+
+
+
+
+
+
+

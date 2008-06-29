@@ -1,0 +1,26 @@
+
+\newpage
+\section{Trabajo futuro}
+
+En este trabajo construimos un motor de base de datos relacional con propósitos académicos
+Que utiliza el método de ARIES para el manejo de transacciones y el aspecto de la recuperación ante caídas imprevistas del sistema.\\
+
+Esta implementación no contempla algunas temas que son muy interesantes en la actualidad como las transacciones distribuidas y transacciones de larga duración; cuestiones abiertas y de investigación en muchas universidades.\\
+
+Una de las principales ideas a futuro es extender este trabajo implementando una versión distribuida de ARIES ( como por ejemplo, D-ARIES ) y que preserve todas las ventajas de ARIES como partial rollbacks , repeatable history, etc.\\
+
+Otro aspecto a mejorar podría ser la etapa de Análisis que se hace durante la recuperación. El cambio consistiría en paralelizar algunas de las etapas de recuperación de ARIES para ganar eficiencia, otra forma de optimizar sería hacer que en la etapa de Redo, éstos sean selectivos, es decir evitar rehacer transacciones que luego se van a deshacer en la etapa de Undo. De esta manera se lograría ganar eficiencia en la parte de recuperación.\\
+
+Mientras se hacen las fases de recuperación, que vaya escuchando nuevos pedidos para que sea más eficiente el arranque.\\
+
+Soportar media recovery (soporte para copias de seguridad y recupera-ción frente a errores ocurridos si se rompe el disco).\\
+
+Deadlock detection en vez de deadlock prevention. Detalles sobre deadlock prevention se pueden encontrar en la secciòn 19.2.2 de \cite{RAMA03}.\\
+
+Agregar un conector estándar JDBC (acceder a la DBMS con un cliente JDBC).\\
+
+Mejorar el sistema de índices en base a la mejoras descrip-tas en \cite{ARIESIM}, \cite{ARIESKVL} y \cite{ARIESLHS}.\\
+
+Agregar soporte para suspender una transacción y luego reanudarla y seguir ejecutándola.\\
+
+   
