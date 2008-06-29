@@ -1,0 +1,151 @@
+\newpage
+\section{Pruebas sobre el sistema}
+
+El objetivo de las pruebas fue principalmente verificar la correctitud
+en toda la funcionalidad soportada por el servidor y el cliente.\\
+
+A continuación, ponemos en detalle una de la pruebas realizadas para
+observar como se va modificando el log a medida que se ejecutan las
+sentencias.\\
+
+\subsection{Pruebas de funcionamiento}
+
+\textbf{Prueba de inserción:}
+
+La siguiente prueba muestra el resultado de ejecutar un insert sobre una
+tabla existente:\\
+
+\texttt{insert into proveedores values('Sancor', 'Cordoba 5400', 46532456);}\\
+
+El Log registra los siguientes cambios:\\
+   \begin{tabular}{|l|l|l|l|l|}
+        \hline
+         3976&INSERT&IdTx: 4&PrevLSN:0&\\
+        \hline
+				 &proveedores&Pag: 0&Reg: 0&\\
+        \hline
+         &&Col: 0&&Sancor\\
+        \hline
+  			 &&Col: 1&&Cordoba 5400\\
+        \hline
+  			 &&Col: 2&&46532456\\
+        \hline
+         4472&PREPARE&IdTx: 4&PrevLSN:4356&\\
+        \hline
+         &Lock:&proveedores&Pag: 0&Reg: 0\\
+        \hline
+         4540&END&IdTx: 4&PrevLSN:4472&\\
+        \hline
+    \end{tabular}\\
+
+El primer evento corresponde a la inserción de un registro a la tabla
+proveedores de la transacción 4, con LSN 3976 crea el registro 0 en la
+pagina 0. También se muestra en el log el contenido en cada columna.\\
+
+Luego se hace un insert de registros de índices por cada columna, los
+cuales no se visualizan en el log. Por eso el LSN 4472 tiene
+PrevLSN:4356 y no 3976.\\
+
+El evento PREPARE, indica el commit de la transacción y muestra los
+locks obtenidos por la misma.\\
+
+El evento END, muestra el cierre de la transacción.\\
+
+El resultado de ejecutar un select sobre la tabla proveedores muestra lo
+siguiente:\\
+
+    \begin{tabular}{|l|c|l|}
+        \hline
+        \textbf{nombre} & \textbf{direccion} & \textbf{telefono} \\
+        \hline
+        Sancor&Cordoba 5400&46532456\\
+        \hline
+    \end{tabular}\\
+
+\textbf{Prueba de rollback:}
+
+Muestra el resultado de ejecutar una transacción explicita en la cual
+se realiza la inserción de dos registros sobre la tabla proveedores y
+luego se hace un rollback.\\
+\texttt{begin transaction;\\
+insert into proveedores values('Parmalat', 'Corrientes 2400',
+46843221);\\
+insert into proveedores values('La Serenisima', 'Callao 1030',
+44327000);\\
+rollback transaction;\\}
+
+El log registra los siguientes cambios:\\
+   \begin{tabular}{|l|l|l|l|l|}
+        \hline
+         4604&INSERT&IdTx: 6&PrevLSN:0&\\
+        \hline
+				 &proveedores&Pag: 0&Reg: 1&\\
+        \hline
+         &&Col: 0&&Parmalat\\
+        \hline
+  			 &&Col: 1&&Corrientes 2400\\
+        \hline
+  			 &&Col: 2&&46843221\\
+        \hline
+         5100&INSERT&IdTx: 6&PrevLSN:4984&\\
+        \hline
+         &proveedores&Pag: 0&Reg: 2&\\
+        \hline
+         &&Col: 0&&La Serenisima\\
+        \hline
+         &&Col: 1&&Callao 1030\\
+        \hline
+         &&Col: 2&&44327000\\
+        \hline
+         5596&ROLLBACK&IdTx: 6&PrevLSN:5480&\\
+        \hline
+         Lectura: 5596&ROLLBACK&proxLSN:5616&&\\
+        \hline
+         Lectura: 5480&INSERT\_INDEX&proxLSN:5596&&\\
+        \hline
+         Lectura: 5364&INSERT\_INDEX&proxLSN:5480&&\\
+        \hline
+         Lectura: 5248&INSERT\_INDEX&proxLSN:5364&&\\
+        \hline
+         Lectura: 5100&INSERT&proxLSN:5248&&\\
+        \hline
+         5868&CLR\_INSERT&IdTx: 6&PrevLSN:5784&\\
+        \hline
+         &&4984&&\\
+        \hline
+         &proveedores&Pag: 0&Reg: 2&\\
+        \hline
+         Lectura: 4984&INSERT\_INDEX&proxLSN:5100&&\\
+        \hline
+         Lectura: 4868&INSERT\_INDEX&proxLSN:4984&&\\
+        \hline
+         Lectura: 4752&INSERT\_INDEX&proxLSN:4868&&\\
+        \hline
+         Lectura: 4604&INSERT&proxLSN:4752&&\\
+        \hline
+         6196&CLR\_INSERT&IdTx: 6&PrevLSN:6112&\\
+        \hline
+         &&0&&\\
+        \hline
+         &proveedores&Pag: 0&Reg: 1&\\
+        \hline
+         6272&END&IdTx: 6&PrevLSN:6196&\\
+        \hline
+    \end{tabular}\\
+
+La operación begin inicializa el PrevLSN en 0. Los dos primeros
+eventos corresponden a la inserción de dos registros en la tabla
+proveedores.Luego se muestra el evento de ROLLBACK de la transacción 6
+y se empieza a recorrer la misma leyendo el log desde la última
+operación hasta la primera (aquí se muestra los eventos sobre los
+índices).\\
+
+Para cada inserción abortada se escribe en el log el evento
+CLR\_INSERT (según lo especificado por ARIES). Este muestra la
+transacción a la que pertenece, los UndoNextLSN, y al final el
+registro que se esta removiendo. Los eventos CLR\_INSERT\_INDEX no son
+mostrados en la pantalla del log, para mejor lectura.\\
+
+Y por último se muestra el evento END de finalización de la
+transacción 6.\\
+

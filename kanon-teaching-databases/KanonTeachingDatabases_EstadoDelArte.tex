@@ -1,0 +1,91 @@
+\newpage
+\section{Estado del arte}
+
+Actualmente hay una inmensa variedad de DBMS tanto con fines industriales como educativos. En esta sección se muestran los proyectos y sistemas mas relevantes cuyas implementaciones nos parecieron interesantes sobre todo lo que respecta al tratamiento de transacciones y la recuperación.\\
+
+\subsection{DBMS para propósitos académicos y de investigación}
+
+Entre los motores de base de datos educativos más importantes se encuentran:\\
+
+MINIBASE, es una base de datos de objetivo educacional. Tiene implementados el Buffer Manager, índices B+ y Disk Space Manager. No tiene implementada la parte de concurrencia, transacciones y recuperacion del sistema \cite{MINIBAS}.\\
+
+MINIREL es una RDBMS multi-usuario simple que se basa en ARIES para el manejo del log y recuperación.
+Implementa la cola del log con una sola página que mantiene en memoria compartida. La lectura y escritura de la misma es mutuamente excluyente.
+Tiene limitaciones de baja concurrencia en el Log Manager y asume crash simples provocados por el propio sistema \cite{MINIREL}.\\
+
+LEAP es una base de datos con soporte multiusuario que usa como lenguaje de consultas el Álgebra Relacional (base teórica para lenguajes como SQL) que maneja también concurrencia y transacciones \cite{LEAP}.\\ 
+
+System R es una base de datos construida como un proyecto de investigación en el IBM San Jose Research en los años '70. Su sistema de recuperación se basa en el protocolo DO-UNDO-REDO, el cual divide a las páginas de la base en dos modelos: \textit{nonshadowed} y \textit{shadowed}. En el primero no hay recuperación automática frente a una caida del sistema o el aborto de una transacción; en el segundo, se guardan versiones de las páginas modificadas por si es necesario restaurarlas a un estado anterior. Mas detalles pueden encontrarse en \cite{GRAY80}.\\
+
+University Ingres, Berkeley Ingres o Ingres89 es la versión original de Ingres desarrollada en UC Berkeley durante la década del 70; la primera implementación de un sistema de administración de base de datos relacional.
+Usa \textit{QUEL} (QUEry Language) como DML, y el funcionamiento y la confiabilidad son solamente justos a adecuado.
+Este sistema multiusuario brinda una vista relacional de datos, soporta dos niveles altos de sublenguajes de datos no procedural, y funciona como una colección de procesos usuario sobre sistema operativo UNIX.
+Para la recuperación se utitiza un archivo temporal por proceso, el cual se borrará o se ejecutará nuevamente si es que el proceso actual ya había comenzado \cite{STONE76}.
+
+\subsection{DBMS para propósitos comerciales}
+
+DERBY es una DBMS comercial y gratuita, implementada en JAVA.
+Basa el manejo de log de transacciones y recuperación en los algoritmos de ARIES.
+Tiene algunas diferencias con el estándar ARIES:\\
+
+\begin{itemize}
+	\item En vez de guardar el pageLSN con la página, guarda un número de versión de la misma.
+\end{itemize}
+
+
+\begin{itemize}
+	\item No guarda una tabla de páginas sucias en el checkpoint. Durante el checkpoint solamente fuerza las paginas a disco.
+\end{itemize}
+
+ 
+\begin{itemize}
+	\item El Undo empieza en el LSN actual al momento de comenzar el checkpoint.
+\end{itemize}
+
+\begin{itemize}
+	\item En en el reinicio del motor, Derby hace el Redo o el Undo según el que tenga LSN mas chico para empezar.
+\end{itemize}
+
+\begin{itemize}
+	\item 	Usa transacciones internas en vez de Nested Top Level Actions para separar los cambios 	  					estructurales de las operaciones normales.
+\end{itemize}
+
+\begin{itemize}
+	\item Derby omite la fase de análisis en el reinicio del motor ya que no lo requiere por la forma 					en la que hace los checkpoints.
+\end{itemize}
+
+Mas información sobre Derby en \cite{DERBY}\\
+
+ALTIBASE es un motor de base de datos relacional de alta performance y tolerancia a fallas que maximiza el uso de la memoria principal para las operaciones logrando una gran performance. Está pensada principalmente para dispositivos móviles.
+Un Log Flush Thread se encarga de enviar el log a disco sin interferir con las transacciones activas.
+El log se escribe en múltiples archivos para mejorar eficiencia en la recuperación.
+También separa las transacciones en distintos niveles de durabilidad, usa un buffer de memoria y otro archivo de mapeo a memoria, ambos como buffer de log.
+En los niveles más altos, un thread sincroniza con un archivo de log en disco.
+En los niveles más bajos, no garantiza la durabilidad del commit ya que en éstos el estado de commit de la transacción se pone antes de ser escrito en el archivo de log.
+Tambien provee distintos niveles de logging basándose en la importancia entre la performance de la transacción y la consistencia  de los datos \cite{ALTIBAS}.\\
+
+SQL Server tambien usa ARIES en su Recovery Manager, junto con el protocolo WAL. Para que una transacción asegure su estado de commit todos sus registros de log deben estar escritos en disco.
+Tiene un enfoque NO FORCE. Soporta locking a nivel registro, rango, página o tabla.
+La tasa de transacciones se incrementa usando transacciones pequeñas \cite{KB230785}.\\
+
+Tanto \cite{ARIES} como \cite{ARIESRH} mencionan la implementación de los algoritmos ARIES en la familia de productos DB2 de IBM.\\
+DB2 guarda imágenes del espacio de tablas y va a la última estable que tenía (en vez de tener que ir al primer registro de log y rehacer toda la operación). DB2 usa entradas en la tabla SYSCOPY para identificar y localizar la copia más reciente a tomar para restaurar. Entonces aplica los cambios a los datos siguiendo la secuencia del log. QUIESCE utility es una utilidad para establecer un punto de consistencia para un table space o un conjunto de table spaces logicamente relacionados. REPORT RECOVERY recopila info de SYSIBM.SYSCOPY y SYSIBM.SYSLGRNX (que son parte del directorio de DB2) para brindar información importante para la recuperación. Hay dos tipos de metodos de recovery: \textit{to current (al más reciente punto de consistencia)} es el estándar para errores de hardware o software; \textit{to a specific point-in-time (a un punto específico)} se aplica mayormente a errores de aplicación \cite{BRUNI02}.\\
+
+
+Oracle es uno de los motores de base de datos relacionales mas importantes de la industria y  
+es usado a gran escala por muchas compañías y multinacionales.
+Para su recovery manager (RMAN) utiliza una tecnología llamada \textit{Flashback}, la cual  
+consiste en un conjunto de métodos para recuperar la integridad de la base de datos luego de  
+producido un crash o un error humano.
+Entre las características mas importantes que brinda la tecnología Flashback se encuentra la  
+posibilidad de generar consultas a versiones antiguas del esquema de objetos, generar  
+consultas de la información histórica de la base de datos y realizar un auto-reparación de  
+información lógica corrupta; todo esto mientras la base de datos se encuentra online.
+Por otro lado no hay mucha información disponible acerca de qué métodos y enfoques utiliza  
+Oracle en su Recovery Manager \cite{ORACLE}.\\
+
+
+
+
+
+ 
