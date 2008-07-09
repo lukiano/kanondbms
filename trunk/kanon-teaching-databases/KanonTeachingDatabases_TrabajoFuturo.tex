@@ -7,7 +7,7 @@ For Database teaching purposes, the project can be extended showing the state of
 
 One idea for future work is to extend this project by implementing some ARIES-based distributed algorithms (as D-ARIES) so that it preserves all the advantages of ARIES, like partial rollbacks and repeatable history.
 
-Another issue of improvement could be the Analysis phase executed in the recovery stage at system startup. One change would consist of parallelize steps in the recovery method in order to gain performance
+Another issue of improvement could be in the Analysis phase executed in the recovery stage at system startup. One change would consist of parallelizing steps in the recovery method in order to gain performance
 and efficiency. An added change could be to create a Selective Redo: not to redo those transactions that will be undone in the Undo phase (faster start-up).
 
 An alternative is to make the system listen to incoming connections (analyze queries, create and process new transactions) at the same moment that the recovering stage is being executed.
@@ -15,7 +15,7 @@ An alternative is to make the system listen to incoming connections (analyze que
 Support media recovery (backup copies and recovery methods when the data disk is faulty).
 
 Provide methods for deadlock detection instead of methods for deadlock prevention. 
-Details for the latter can be found at section 19.2.2 of \cite{RaGh03}.
+Details for this issue can be found at section 19.2.2 of \cite{RaGh03}.
  
 Build a standard JDBC connector (access to the DBMS throughout a JDBC client).
 

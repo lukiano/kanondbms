@@ -16,9 +16,9 @@ These academic aims gave us the requirement to build the engine as simple as pos
 
 To program the basic components and modules, we considered what was learned during the databases course \cite{FCENBD}, and read from the course main texts (\cite{RaGh03}, \cite{Ullm88} and \cite{BeHG87}).
 
-As it is explained later, the ARIES algorithms allowed the Buffer Manager to use a \textbf{steal / no-force} scheme \cite{RaGh03}. This scheme makes the manager implementation simpler, as there is no need for shadow copies.  Also it was a requirement that the locking system was based on the Two Phase Locking idea. We have extended this requirement and added support to the four standard isolation levels \cite{WIISLE}.
+The ARIES algorithms allowed the Buffer Manager to use a \textbf{steal / no-force} scheme \cite{RaGh03}. This scheme makes the manager implementation simpler, as there is no need for shadow copies.  El sistema de lockeo se encuentra basado en la idea de Two Phase Locking  y extendida para soportar los cuatro niveles estandar de aislamiento \cite{WIISLE}.
 
-The DBMS also includes hash based indexes to provide greater concurrence between queries executed in parallel. These queries are written in standard SQL, and the engine analyses and decomposes the query to execute it on the data base records.
+The DBMS also includes simple hash based indexes to provide greater concurrence between queries executed in parallel. These queries are written in standard SQL, and the engine analyses and decomposes the query to execute it on the data base records.
 
 In order to visualize the engine operation, and to provide a way to execute queries and see their results, a special client was built \cite{LBCP07a}, which allows many concurrent connections to the server, and to execute several queries at the same time. This client also reports the state of whatever object is locked or released during the course of each transaction, and shows the log events of each operation within those transactions.
 
