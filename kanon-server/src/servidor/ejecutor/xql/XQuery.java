@@ -102,13 +102,13 @@ public class XQuery implements XStatement {
                                 }
                             }
                             if (!columnaEncontrada) {
-                            	throw new RuntimeException("La columna '" + nombreCol + "' no existe en la tabla '" + tabla.id().nombre() + "'.");
+                            	throw new RuntimeException("Column '" + nombreCol + "' not found in table '" + tabla.id().nombre() + "'.");
                             }
             			} else {
                     		columnasResultado[i] = new ColumnaImpl(nombreCol, CampoHelper.dameCampo(constant), i);	
             			}
             		} else {
-            			throw new RuntimeException("Imposible determinar el campo para la proyeccion de '" + nombreCol + "'.");
+            			throw new RuntimeException("Unable to know columns needed to project '" + nombreCol + "'.");
             		}
             	}
             }
@@ -162,7 +162,7 @@ public class XQuery implements XStatement {
         Vector<ZFromItem> fromVector = zql.getFrom();
         // no manejamos producto cartesiano (JOIN), suponemos que from tiene una sola tabla
         if (fromVector.size() != 1) {
-            throw new RuntimeException("Cantidad de tablas no soportada en FROM: " + fromVector.size());
+            throw new RuntimeException("Unsupported number of tables: " + fromVector.size());
         }
         
         this.nombreTabla = fromVector.get(0).getTable();
@@ -174,7 +174,7 @@ public class XQuery implements XStatement {
         while (selectIterator.hasNext()) {
             ZSelectItem selectItem = selectIterator.next();
             if (selectItem.getAggregate() != null) {
-            	throw new RuntimeException("Las agregaciones en SELECT no se encuentran soportadas: " + selectItem.getAggregate());
+            	throw new RuntimeException("Query aggregations are not supported: " + selectItem.getAggregate());
             }
             if ("*".equals(selectItem.getColumn())) {
             	this.proyeccion.clear();
@@ -192,7 +192,7 @@ public class XQuery implements XStatement {
     public Resultado execute() {
         Tabla tabla = FabricaCatalogo.dameInstancia().dameTabla(this.nombreTabla);
         if (tabla == null) {
-            throw new RuntimeException("La tabla especificada no existe en el catalogo: " + this.nombreTabla);
+        	throw new RuntimeException("No table exists with name '" + this.nombreTabla + "'.");
         }
         
         QueryComando comando = new QueryComando(tabla);

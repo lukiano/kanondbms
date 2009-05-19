@@ -32,28 +32,28 @@ public class XTransactStmt implements XStatement {
         
         if (this.comando.equals("BEGIN")) {
             transactionManager.iniciarTransaccion();
-            resultado.setMensaje("Transaccion iniciada exitosamente.");
+            resultado.setMensaje("Transaction begun.");
         } else if (this.comando.equals("COMMIT")) {
             transactionManager.commitTransaccion();
-            resultado.setMensaje("Transaccion confirmada exitosamente.");
+            resultado.setMensaje("Transaction committed.");
         } else if (this.comando.startsWith("ROLLBACK")) {
         	if (this.comando.equals("ROLLBACK")) {
                 transactionManager.abortarUltimaTransaccion();
-                resultado.setMensaje("Transaccion abortada exitosamente.");
+                resultado.setMensaje("Transaction aborted.");
         	} else {
             	String[] sentencias = this.comando.split(" ");
             	String savepoint = sentencias[1];
                 transactionManager.abortarUltimaTransaccionHasta(savepoint);
-                resultado.setMensaje("Transaccion abortada hasta '" + savepoint + "'.");
+                resultado.setMensaje("Transaction aborted up to '" + savepoint + "'.");
         	}
         } else if (this.comando.startsWith("SAVEPOINT")) {
         	if (transactionManager.estadoActual() != Estado.EN_CURSO) {
-        		throw new RuntimeException("Imposible establecer un savepoint fuera de una transaccion.");
+        		throw new RuntimeException("Unable to set a savepoint outside a transaction.");
         	}
         	String[] sentencias = this.comando.split(" ");
         	String nombreSavepoint = sentencias[1];
             transactionManager.dameTransaccion().establecerSavepoint(nombreSavepoint);
-            resultado.setMensaje("Savepoint con nombre '" + nombreSavepoint + "' establecido exitosamente.");
+            resultado.setMensaje("Savepoint '" + nombreSavepoint + "' set.");
         } else if (this.comando.startsWith("ISOLATION")) {
         	String[] sentencias = this.comando.split(" ");
         	String nombreAislamiento = sentencias[1];
@@ -61,12 +61,12 @@ public class XTransactStmt implements XStatement {
         	try {
         		aislamiento = Aislamiento.valueOf(nombreAislamiento);
         	} catch (IllegalArgumentException e) {
-        		throw new RuntimeException("Aislamiento no reconocido: " + nombreAislamiento);
+        		throw new RuntimeException("Unknown isolation level: " + nombreAislamiento);
         	}
             transactionManager.establecerAislamiento(aislamiento);
-            resultado.setMensaje("Aislamiento " + nombreAislamiento + " establecido exitosamente para futuras transacciones.");
+            resultado.setMensaje("Isolation " + nombreAislamiento + " set for future transactions.");
         } else {
-            throw new RuntimeException("Comando de transaccion no reconocido: " + this.comando);
+            throw new RuntimeException("Transaction command not recognized: " + this.comando);
         }
 		return resultado;
 	}

@@ -232,7 +232,7 @@ public class EventoUpdateIndex extends EventoTransaccion {
 
 	@Override
 	public String toString() {
-		return super.toString() + "RegIndice:" + this.idRegistroIndice + "|Referenciado:" + this.registroReferenciado;
+		return super.toString() + "RecIndex:" + this.idRegistroIndice + "|Reference:" + this.registroReferenciado;
 	}
 
 }

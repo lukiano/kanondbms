@@ -34,7 +34,7 @@ public class XDropTable implements XStatement {
 
         Catalogo catalogo = FabricaCatalogo.dameInstancia();
         catalogo.borrarTabla(this.tableName);
-        rto.setMensaje("Borrado exitoso de tabla: " + this.tableName);
+        rto.setMensaje("Table '" + this.tableName + "' erased successfully.");
 
         return rto;
     }

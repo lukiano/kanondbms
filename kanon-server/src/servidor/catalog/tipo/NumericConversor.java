@@ -16,7 +16,7 @@ public final class NumericConversor extends Conversor {
     @Override
     public Object convertir(Campo campo, Object valor) {
         switch (campo.tipo()) {
-            case NUMERIC:
+            case INTEGER:
                 return valor;
             case CHAR:
             	char[] cs = (char[]) valor;

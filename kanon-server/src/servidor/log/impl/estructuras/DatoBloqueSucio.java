@@ -17,6 +17,6 @@ public class DatoBloqueSucio {
 	
 	@Override
 	public String toString() {
-		return "Pag:" + idPagina + "-Buc:" + idBucket + "-RecLSN:" + recLSN; 
+		return "Page:" + idPagina + (idBucket!=null?"-Bucket:" + idBucket:"") + "-RecLSN:" + recLSN; 
 	}
 }

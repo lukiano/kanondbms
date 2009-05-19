@@ -77,7 +77,7 @@ public final class Valor {
      */
     @Override
     public String toString() {
-    	return "(Posicion: " + this.posicion + " - Campo: " + this.campo + " - Contenido: " + Conversor.conversorATexto().convertir(this.campo, this.contenido) + ")";
+    	return "(Position: " + this.posicion + " - Field: " + this.campo + " - Content: " + Conversor.conversorATexto().convertir(this.campo, this.contenido) + ")";
     }
     
 }

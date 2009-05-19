@@ -43,9 +43,9 @@ class DMLParser implements Parser {
             ret =(ZInsert) p.readStatement();
         }
         catch (TokenMgrError e) {
-            throw new ParseException("La sentencia se encuentra mal formada.", e);
+            throw new ParseException("Parser DML: SQL string not recognized.", e);
         } catch (Zql.ParseException e) {
-        	throw new ParseException("La sentencia se encuentra mal formada.", e);
+        	throw new ParseException("Parser DML: SQL string not recognized.", e);
 		}
 //      testeo de la sentencia....
         System.out.println("COLUMNAS PART:"+ ret.getColumns());
@@ -72,11 +72,11 @@ class DMLParser implements Parser {
             try {
                 st = (ZQuery) p.readStatement();
             } catch (Zql.ParseException e) {
-            	throw new ParseException("Parser DML: Cadena no reconocida", e);
+            	throw new ParseException("Parser DML: SQL string not recognized.", e);
             }
         }
         catch (TokenMgrError e) {
-            throw new ParseException("Parser DML: Cadena no reconocida", e);
+            throw new ParseException("Parser DML: SQL string not recognized.", e);
         }
         
         // Agrego la verdadera parte del SELECT obtenida anteriormente.
@@ -108,9 +108,9 @@ class DMLParser implements Parser {
             st = p.readStatement();
         }
         catch (TokenMgrError e) {
-            throw new ParseException("Parser DML: Cadena no reconocida", e);
+            throw new ParseException("Parser DML: SQL string not recognized.", e);
         } catch (Zql.ParseException e) {
-        	throw new ParseException("Parser DML: Cadena no reconocida", e);
+        	throw new ParseException("Parser DML: SQL string not recognized.", e);
 		}
         //solo para testeo..
         ZUpdate st2=(ZUpdate)st;
@@ -140,9 +140,9 @@ class DMLParser implements Parser {
             st =(ZDelete) p.readStatement();
         }
         catch (TokenMgrError e) {
-            throw new ParseException("Parser DML: Cadena no reconocida", e);
+            throw new ParseException("Parser DML: SQL string not recognized.", e);
         } catch (Zql.ParseException e) {
-        	throw new ParseException("Parser DML: Cadena no reconocida", e);
+        	throw new ParseException("Parser DML: SQL string not recognized.", e);
 		}
         
         //testeo de la sentencia....

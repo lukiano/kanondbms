@@ -27,7 +27,7 @@ public class IteradorConsultaConIndices extends IteradorConsultaRegular {
         	Campo campoColumna = columnas[indice.posicion()].campo();
         	if (campoColumna.tipo().equals(indice.campo().tipo())) {
         		// lo son
-            	System.out.println("Indice encontrado: " + indice.posicion() + " - " + Conversor.conversorATexto().convertir(indice.campo(), indice.contenido()));
+            	System.out.println("Index found: " + indice.posicion() + " - " + Conversor.conversorATexto().convertir(indice.campo(), indice.contenido()));
             	return FabricaHashManager.dameInstancia()
             		.dameRegistros(tabla.id(), indice.posicion(), indice.contenido());
         	}

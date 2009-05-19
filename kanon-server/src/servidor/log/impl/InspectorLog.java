@@ -167,9 +167,9 @@ public class InspectorLog implements Log {
 	public Evento leerEvento(LSN lsn) {
 		Evento evento = this.log.leerEvento(lsn);
 		if (evento != null) {
-			this.inspector.agregarEvento("Lectura", lsn.toString(), 
+			this.inspector.agregarEvento("Read", lsn.toString(), 
 					evento.operacion().toString(), 
-					"longitud", 
+					"length", 
 					String.valueOf(evento.longitud()));
 		}
 		return evento;

@@ -14,7 +14,7 @@ public enum Tipo {
     /**
      * Tipo de datos numerico.
      */
-    NUMERIC, 
+    INTEGER, 
     
     /**
      * Tipo de datos para un arreglo de caracteres de longitud variable.
@@ -55,9 +55,9 @@ public enum Tipo {
     	clases = new HashMap<Tipo, Class>(Tipo.values().length);
     	tipos = new HashMap<Class, Tipo>(Tipo.values().length);
     	
-        clases.put(NUMERIC, Integer.class);
+        clases.put(INTEGER, Integer.class);
         clases.put(CHAR, String.class);
-        tipos.put(Integer.class, NUMERIC);
+        tipos.put(Integer.class, INTEGER);
         tipos.put(String.class, CHAR);
     }
     

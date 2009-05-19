@@ -54,7 +54,7 @@ public abstract class Conversor {
     // Llenado del mapa.
     static {
         mapa = new HashMap<Tipo, Class<? extends Conversor> >(Tipo.values().length);
-        mapa.put(Tipo.NUMERIC, NumericConversor.class);
+        mapa.put(Tipo.INTEGER, NumericConversor.class);
         mapa.put(Tipo.CHAR, CharArrayConversor.class);
     }
 

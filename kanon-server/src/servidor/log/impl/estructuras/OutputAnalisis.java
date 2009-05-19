@@ -20,6 +20,6 @@ public final class OutputAnalisis {
 
 	@Override
 	public String toString() {
-		return "RedoLSN:" + redoLSN + "\nTransTable:" + transTable + "\nBloquesSucios:" + dirtyBloques;
+		return "RedoLSN:" + redoLSN + "\nTransTable:" + transTable + "\nDirtyPages:" + dirtyBloques;
 	}
 }

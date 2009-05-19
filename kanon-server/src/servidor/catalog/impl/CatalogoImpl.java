@@ -96,23 +96,23 @@ public class CatalogoImpl implements Catalogo {
     static {
     	ColumnaTablasSistema.put(NOMBRE_TABLA_DE_TABLAS, 
     			new Columna[] { 
-    				new ColumnaImpl("NombreTabla", LONGITUD_CAMPO_NOMBRE_TABLA, 0, Tipo.CHAR), 
-    				new ColumnaImpl("IdTabla", LONGITUD_INT, 1, Tipo.NUMERIC)
+    				new ColumnaImpl("TableName", LONGITUD_CAMPO_NOMBRE_TABLA, 0, Tipo.CHAR), 
+    				new ColumnaImpl("IdTable", LONGITUD_INT, 1, Tipo.INTEGER)
     			});
     	
     	ColumnaTablasSistema.put(NOMBRE_TABLA_DE_PAGINAS,
     			new Columna[] {  
-					new ColumnaImpl("NombreTabla", LONGITUD_CAMPO_NOMBRE_TABLA, 0, Tipo.CHAR),
-					new ColumnaImpl("CantidadDePaginas", LONGITUD_INT, 1, Tipo.NUMERIC)
+					new ColumnaImpl("TableName", LONGITUD_CAMPO_NOMBRE_TABLA, 0, Tipo.CHAR),
+					new ColumnaImpl("NumberOfPages", LONGITUD_INT, 1, Tipo.INTEGER)
 				});
 
     	ColumnaTablasSistema.put(NOMBRE_TABLA_DE_COLUMNAS,
     			new Columna[] { 
-    				new ColumnaImpl("NombreTabla", LONGITUD_CAMPO_NOMBRE_TABLA, 0, Tipo.CHAR),
-    				new ColumnaImpl("NombreColumna", LONGITUD_CAMPO_NOMBRE_COLUMNA, 1, Tipo.CHAR),
-    				new ColumnaImpl("PosicionColumna", LONGITUD_INT, 2, Tipo.NUMERIC),
-    				new ColumnaImpl("TipoColumna", LONGITUD_CAMPO_TIPO_COLUMNA, 3, Tipo.CHAR),
-    				new ColumnaImpl("LongitudCampo", LONGITUD_INT, 4, Tipo.NUMERIC) 
+    				new ColumnaImpl("TableName", LONGITUD_CAMPO_NOMBRE_TABLA, 0, Tipo.CHAR),
+    				new ColumnaImpl("ColumnName", LONGITUD_CAMPO_NOMBRE_COLUMNA, 1, Tipo.CHAR),
+    				new ColumnaImpl("ColumnPosition", LONGITUD_INT, 2, Tipo.INTEGER),
+    				new ColumnaImpl("ColumnType", LONGITUD_CAMPO_TIPO_COLUMNA, 3, Tipo.CHAR),
+    				new ColumnaImpl("FieldLength", LONGITUD_INT, 4, Tipo.INTEGER) 
     			});
     	NumeroTablasSistema.put(NOMBRE_TABLA_DE_TABLAS, Integer.MAX_VALUE);
     	NumeroTablasSistema.put(NOMBRE_TABLA_DE_COLUMNAS, Integer.MAX_VALUE-1);

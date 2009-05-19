@@ -16,7 +16,7 @@ public final class Texto_Conversor extends Conversor {
     @Override
     public Object convertir(Campo campo, Object valor) {
         switch (campo.tipo()) {
-            case NUMERIC:
+            case INTEGER:
                 Integer integer = (Integer) valor;
                 return integer.toString();
             case CHAR:

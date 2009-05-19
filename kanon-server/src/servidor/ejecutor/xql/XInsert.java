@@ -73,7 +73,7 @@ public class XInsert implements XStatement {
         Catalogo catalogo = FabricaCatalogo.dameInstancia();
         Tabla tabla = catalogo.dameTabla(this.nombreTabla);
         if (tabla == null) {
-            throw new RuntimeException("La tabla especificada no existe en el catalogo: " + this.nombreTabla);
+        	throw new RuntimeException("No table exists with name '" + this.nombreTabla + "'.");
         }
         if (this.valoresInsercion == null) {
             return manejarSubquery(tabla);
@@ -101,7 +101,7 @@ public class XInsert implements XStatement {
 		for (int i = 0; i < valoresInsercion.size(); i++) {
 			ZExp value = valoresInsercion.get(i);
 			if (value instanceof ZQuery) {
-				throw new RuntimeException("Las subconsultas en un INSERT no estan soportadas: " + value);
+				throw new RuntimeException("INSERT subqueries are not supported: " + value);
 			}
 			if (value instanceof ZExpression) {
 				value = ZQLEvalHelper.convertirExpresionAConstante((ZExpression)value);
@@ -114,7 +114,7 @@ public class XInsert implements XStatement {
 		        if (this.columnas == null) {
 		        	// no se mencionan las columnas
 		        	if (columnasUsadas.isEmpty()) {
-		        		throw new RuntimeException("Cantidad incorrecta de columnas y valores en INSERT");
+		        		throw new RuntimeException("Wrong number of columns and values in INSERT statement.");
 		        	}
 		            if (!CampoHelper.camposDelMismoTipo(columnas[i].campo(), campo)) {
 		            	throw new RuntimeException("Se quiere insertar un elemento del tipo " + campo.toString()
@@ -123,7 +123,7 @@ public class XInsert implements XStatement {
 		            Object contenido = conversor.convertir(columnas[i].campo(), constant.getValue());
 		            valores.add(Valor.nuevoValor(i, columnas[i].campo(), contenido) );
 		            if (!columnasUsadas.get(i)) {
-		            	throw new RuntimeException("Cantidad incorrecta de columnas y valores en INSERT");
+		            	throw new RuntimeException("Wrong number of columns and values in INSERT statement.");
 		            }
 		            columnasUsadas.clear(i);
 		        } else {
@@ -133,13 +133,13 @@ public class XInsert implements XStatement {
 		        		for (int j = 0; j < columnas.length; j++) {
 		        			if (nombreColumna.equals(columnas[j].nombre())) {
 		                        if (!CampoHelper.camposDelMismoTipo(columnas[j].campo(), campo)) {
-		                        	throw new RuntimeException("Se quiere insertar un elemento del tipo " + campo.toString()
-		                        			+ " en la columna " + columnas[j].nombre());
+		                        	throw new RuntimeException("Unable to insert an element of type '" + campo.toString()
+		                        			+ "' in column " + columnas[j].nombre());
 		                        }
 		                        Object contenido = conversor.convertir(columnas[j].campo(), constant.getValue());
 		                        valores.add(Valor.nuevoValor(j, columnas[j].campo(), contenido) );
 		    		            if (!columnasUsadas.get(j)) {
-		    		            	throw new RuntimeException("Cantidad incorrecta de columnas y valores en INSERT");
+		    		            	throw new RuntimeException("Wrong number of columns and values in INSERT statement.");
 		    		            }
 		                        columnasUsadas.clear(j);
 		                        encontrado = true;
@@ -147,10 +147,10 @@ public class XInsert implements XStatement {
 		        			}
 		        		}
 		        		if (!encontrado) {
-		        			throw new RuntimeException("No se encuentra la columna con nombre '" + nombreColumna + "' en la tabla " + this.nombreTabla);
+		        			throw new RuntimeException("Column '" + nombreColumna + "' not found in table '" + this.nombreTabla + "'.");
 		        		}
 		        	} else {
-		        		throw new RuntimeException("Cantidad incorrecta de columnas y valores en INSERT");
+		        		throw new RuntimeException("Wrong number of columns and values in INSERT statement.");
 		        	}
 		        }
 		    } else {
@@ -159,7 +159,7 @@ public class XInsert implements XStatement {
 		    }
 		}
 		if (!columnasUsadas.isEmpty()) {
-			throw new RuntimeException("Cantidad incorrecta de columnas y valores en INSERT");
+			throw new RuntimeException("Wrong number of columns and values in INSERT statement.");
 		}
 		tabla.insertarRegistro(valores);
 		rto.setMensaje("Successful insertion of 1 record " +
@@ -232,14 +232,14 @@ public class XInsert implements XStatement {
 				if (nombreColumna.equals(columnas[j].nombre())) {
 					encontrado = true;
 					if (conversionColumnas.containsKey(j)) {
-						throw new RuntimeException("Cantidad incorrecta de columnas y valores en INSERT");
+						throw new RuntimeException("Wrong number of columns and values in INSERT statement.");
 					}
 					conversionColumnas.put(j, i);
 					break;
 				}
 			}
 			if (!encontrado) {
-				throw new RuntimeException("No se encuentra la columna con nombre '" + nombreColumna + "' en la tabla " + this.nombreTabla);
+				throw new RuntimeException("Column '" + nombreColumna + "' not found in table '" + this.nombreTabla + "'.");
 			}
 		}
 		return conversionColumnas;
@@ -269,11 +269,11 @@ public class XInsert implements XStatement {
     	Columna[] columnasTablaOriginal = tablaOriginal.columnas();
     	Columna[] columnasTablaDestino = tablaDestino.columnas();
     	if (conversionColumnas.keySet().size() != columnasTablaDestino.length) {
-    		throw new RuntimeException("Los tipos de la SubConsulta no coinciden con los tipos de la tabla.");
+    		throw new RuntimeException("Subquery return types don't match with table column types.");
     	}
     	for (int i = 0; i < columnasTablaDestino.length; i++) {
     		if (!CampoHelper.camposDelMismoTipo(columnasTablaOriginal[conversionColumnas.get(i)].campo(), columnasTablaDestino[i].campo())) {
-    			throw new RuntimeException("Los tipos de la SubConsulta no coinciden con los tipos de la tabla."); 
+    			throw new RuntimeException("Subquery return types don't match with table column types."); 
     		}
     	}
 	}

@@ -16,7 +16,7 @@ public final class CharArrayConversor extends Conversor {
     @Override
     public Object convertir(Campo campo, Object valor) {
         switch (campo.tipo()) {
-            case NUMERIC:
+            case INTEGER:
             {
                 Integer integer = (Integer) valor;
                 char[] cadena = integer.toString().toCharArray();

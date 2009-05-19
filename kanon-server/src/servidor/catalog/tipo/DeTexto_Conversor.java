@@ -16,7 +16,7 @@ public final class DeTexto_Conversor extends Conversor {
     @Override
     public Object convertir(Campo campo, Object valor) {
         switch (campo.tipo()) {
-            case NUMERIC:
+            case INTEGER:
                 return Integer.parseInt((String)valor);
             case CHAR:
             	char[] cadena = ((String)valor).toCharArray();

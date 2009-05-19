@@ -70,7 +70,7 @@ public class MainParser {
 				ret =SistemaParser.parseCrashStatement(sentencia);
 			}
 			else {
-				throw new ParseException("Cadena no reconocida.");
+				throw new ParseException("SQL string not recognized.");
 			}
 		}
 		else {

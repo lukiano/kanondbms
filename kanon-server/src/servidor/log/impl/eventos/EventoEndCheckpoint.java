@@ -127,7 +127,7 @@ public class EventoEndCheckpoint extends Evento {
 	
 	@Override
 	public String toString() {
-		return super.toString() + "\nTransacciones:" + this.transacciones + "\nBloquesSucios:" + this.bloquesSucios;
+		return super.toString() + "\nTransactions:" + this.transacciones + "\nDirtyPages:" + this.bloquesSucios;
 	}
 
 }

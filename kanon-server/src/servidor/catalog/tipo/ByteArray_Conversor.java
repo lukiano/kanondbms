@@ -19,7 +19,7 @@ public final class ByteArray_Conversor extends Conversor {
     @Override
     public Object convertir(Campo campo, Object valor) {
         switch (campo.tipo()) {
-            case NUMERIC:
+            case INTEGER:
             {
                 Integer integer = (Integer) valor;
                 long l = integer.longValue();

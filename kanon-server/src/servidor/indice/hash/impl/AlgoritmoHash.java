@@ -37,7 +37,7 @@ final class AlgoritmoHash {
 				int hash = hashCode((char[])valor);
 				return modulo(hash, MODULO);
 			}
-			case NUMERIC: {
+			case INTEGER: {
 				if (!(valor.getClass().equals(Integer.class))) {
 					throw new ClassCastException("El valor no corresponde al tipo NUMERIC");
 				}
