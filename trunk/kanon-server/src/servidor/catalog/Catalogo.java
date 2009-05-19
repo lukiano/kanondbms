@@ -17,17 +17,17 @@ public interface Catalogo {
     /**
      * Nombre de la tabla donde se guardan los nombres de las tablas de usuario.
      */
-    String NOMBRE_TABLA_DE_TABLAS = "tablas";
+    String NOMBRE_TABLA_DE_TABLAS = "sys_table";
     
     /**
      * Nombre de la tabla donde se guardan los datos de las columnas de cada tabla de usuario.
      */
-    String NOMBRE_TABLA_DE_COLUMNAS = "columnas";
+    String NOMBRE_TABLA_DE_COLUMNAS = "sys_column";
     
     /**
      * Nombre de la tabla que contiene la cantidad de paginas de cada tabla del usuario.
      */
-    String NOMBRE_TABLA_DE_PAGINAS = "paginas";
+    String NOMBRE_TABLA_DE_PAGINAS = "sys_page";
     
     /**
      * La longitud maxima que puede tener el nombre de una tabla.

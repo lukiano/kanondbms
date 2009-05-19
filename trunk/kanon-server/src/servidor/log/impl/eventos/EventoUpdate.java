@@ -311,7 +311,7 @@ public class EventoUpdate extends EventoTransaccion {
 
 	@Override
 	public String toString() {
-		return super.toString() + "Reg:" + this.idRegistro + "\nContenidoViejo:" + this.contenidoViejo + "\nContenidoNuevo:" + this.contenidoNuevo;
+		return super.toString() + "Rec:" + this.idRegistro + "\nOldValue:" + this.contenidoViejo + "\nNewValue:" + this.contenidoNuevo;
 	}
 
 }

@@ -31,7 +31,7 @@ public class CatalogoTestCase extends TestCase {
 		
 		Columna[] columnas = new Columna[] {
 				new ColumnaImpl("col1", 30, 1, Tipo.CHAR),
-				new ColumnaImpl("col2", 1, 2, Tipo.NUMERIC),
+				new ColumnaImpl("col2", 1, 2, Tipo.INTEGER),
 				new ColumnaImpl("col3", 10, 3, Tipo.CHAR)
 		};
 		catalogo.crearTabla("tabla1", columnas);

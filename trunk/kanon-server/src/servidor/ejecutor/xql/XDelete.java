@@ -74,7 +74,7 @@ public class XDelete implements XStatement {
         Catalogo catalogo = FabricaCatalogo.dameInstancia();
         Tabla tabla = catalogo.dameTabla(this.nombreTabla);
         if (tabla == null) {
-            throw new RuntimeException("La tabla especificada no existe en el catalogo: " + this.nombreTabla);
+        	throw new RuntimeException("No table exists with name '" + this.nombreTabla + "'.");
         }
         
         DeleteComando comando = new DeleteComando();

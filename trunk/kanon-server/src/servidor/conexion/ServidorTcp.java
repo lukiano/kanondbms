@@ -31,12 +31,12 @@ public class ServidorTcp {
     /**
      * Puerto donde se manejan las conexiones con los clientes.
      */
-    public static final int PORT = 4444;
+    public static final int PORT = 34444;
     
     /**
      * Puerto donde se escucha la senial para el apagado del motor.
      */
-    public static final int STOP_PORT = 4445;
+    public static final int STOP_PORT = 34445;
     
     /**
      * Socket que escucha a los clientes.
@@ -118,11 +118,11 @@ public class ServidorTcp {
      * @see RecoveryManager
      */
     private void chequearRecovery() {
-        System.out.println("Verifying necessity to recover the system...");
+        System.out.println("Checking need to recover the system...");
         RecoveryManager recoveryManager =
             FabricaRecoveryManager.dameInstancia();
         recoveryManager.recuperarSistema();
-        System.out.println("Consistent system.");
+        System.out.println("System is stable.");
     }
     
     /**

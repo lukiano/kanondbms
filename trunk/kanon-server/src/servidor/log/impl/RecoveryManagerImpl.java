@@ -57,14 +57,14 @@ public class RecoveryManagerImpl implements RecoveryManager {
      */
     public void checkpoint() {
     	if (this.usarInspector) {
-    		this.inspector.agregarEvento("Making Checkpoint...");
+    		this.inspector.agregarEvento("Setting Checkpoint...");
     	}
     	LSN lsnBegin = this.log.escribirBeginCheckpoint();
     	this.log.escribirEndCheckpoint(this.dameTransaccionesActivas(), this.dameBloquesSucios());
     	this.log.escribirMasterRecord(lsnBegin);
         FabricaBufferManager.dameInstancia().guardarBloquesModificados();
         if (this.usarInspector) {
-        	this.inspector.agregarEvento("Made Checkpoint.");
+        	this.inspector.agregarEvento("Checkpoint set.");
         }
     }
 	
@@ -134,8 +134,8 @@ public class RecoveryManagerImpl implements RecoveryManager {
     public void recuperarSistema() {
     	OutputAnalisis outputAnalisis = this.analisis();
     	if (this.usarInspector) {
-        	this.inspector.agregarEvento("Table of Transactions: " + outputAnalisis.transTable.keySet());
-        	this.inspector.agregarEvento("Table of dirty blocks: " + outputAnalisis.dirtyBloques.keySet());
+        	this.inspector.agregarEvento("Transactions Table: " + outputAnalisis.transTable.keySet());
+        	this.inspector.agregarEvento("Dirty Pages Table: " + outputAnalisis.dirtyBloques.keySet());
         }
     	// obtengo el proximo ID de transaccion
     	int proximoIDTransaccion = 0;
@@ -169,7 +169,7 @@ public class RecoveryManagerImpl implements RecoveryManager {
      */
     private OutputAnalisis analisis() {
     	if (this.usarInspector) {
-    		this.inspector.agregarEvento("ARIES", "Phase of Analysis");
+    		this.inspector.agregarEvento("ARIES", "Analysis Phase");
     	}
     	OutputAnalisis outputAnalisis = new OutputAnalisis();
     	// obtengo el LSN del ultimo begin checkpoint
@@ -227,7 +227,7 @@ public class RecoveryManagerImpl implements RecoveryManager {
      */
     private void redo(LSN redoLSN, Map<Bloque.ID, DatoBloqueSucio> dirtyBloques) {
     	if (this.usarInspector) {
-    		this.inspector.agregarEvento("ARIES", "Redo's phase");
+    		this.inspector.agregarEvento("ARIES", "Redo phase");
     	}
     	LSN lsnActual = redoLSN;
        	Evento eventoActual = this.log.leerEvento(lsnActual);
@@ -249,7 +249,7 @@ public class RecoveryManagerImpl implements RecoveryManager {
      */
     private void undo(Map<Transaccion.ID, DatoTransaccion> transTable) {
     	if (this.usarInspector) {
-    		this.inspector.agregarEvento("ARIES", "Undo's phase");
+    		this.inspector.agregarEvento("ARIES", "Undo phase");
     	}
     	while (!transTable.isEmpty()) {
     		DatoTransaccion datoTransaccionConMaximoLSN = this.dameMaximoUndoLSN(transTable.values());

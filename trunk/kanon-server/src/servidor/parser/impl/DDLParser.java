@@ -51,14 +51,14 @@ class DDLParser implements Parser {
         List<String> pks = null;
 
         if (createTablePos == -1 || parentesisAbrePos == -1 || parentesisAbrePos < createTablePos) {
-            throw new ParseException("La sentencia se encuentra mal formada.");
+            throw new ParseException("Parser DDL: SQL string not recognized.");
         }
         // Obtengo el nombre de la tabla
         String tableName = sentencia.substring(createTablePos + "create table ".length(), parentesisAbrePos).trim();
         
         // Obtengo la definicion de las columnas de la tabla
         if (parentesisCierraPos == -1 || parentesisCierraPos < parentesisAbrePos) {
-            throw new ParseException("La sentencia se encuentra mal formada.");
+            throw new ParseException("Parser DDL: SQL string not recognized.");
         }
         // Si hay una definicion de primary Key, entonces tiene que estar en la ultima posicion del arreglo.
         String restDefinition = sentencia;
@@ -85,8 +85,8 @@ class DDLParser implements Parser {
         ZCreateTable st = new ZCreateTable(tableName, cols, pks);
         
         //testeo del create table
-        System.out.println("NOMBRE TABLA: "+st.getTableName());
-        System.out.println("COLUMNAS: "+st.getColumnas().toString());
+        System.out.println("TABLE NAME: "+st.getTableName());
+        System.out.println("COLUMNS: "+st.getColumnas().toString());
         System.out.println("PK: " + st.getPKs());
         return st;//new ZCreateTable(tableName, cols, pks);
     }
@@ -104,15 +104,15 @@ class DDLParser implements Parser {
         int endCharPos = sentencia.indexOf(";");
         
         if (tablePos == -1 || endCharPos == -1 || endCharPos < tablePos) {
-            throw new ParseException("La sentencia se encuentra mal formada.");
+            throw new ParseException("Parser DDL: SQL string not recognized.");
         }
         // Tomo el nombre de la tabla
-        String tableName = sentencia.substring(tablePos + " table ".length(), endCharPos).trim();
+        String tableName = (sentencia.substring(tablePos + " table ".length(), endCharPos)).trim();
         
         ZDropTable dropTable = new ZDropTable(tableName);
         
         //testeo
-        System.out.println("NOMBRE TABLA: "+dropTable.getTableName() );
+        System.out.println("TABLE NAME: "+dropTable.getTableName() );
         
         return dropTable;
     }
@@ -127,7 +127,7 @@ class DDLParser implements Parser {
         int parentesisCierraPos = PKs.lastIndexOf(")");
         
         if (parentesisAbrePos == -1 || parentesisCierraPos == -1 || parentesisCierraPos < parentesisAbrePos) {
-            throw new ParseException("La sentencia se encuentra mal formada.");
+            throw new ParseException("Parser DDL: SQL string not recognized.");
         }
         String[] campos = PKs.substring(parentesisAbrePos+1, parentesisCierraPos).split(",");
         for (int x = 0; x < campos.length; ++x) {
@@ -158,7 +158,7 @@ class DDLParser implements Parser {
             int parentesisCierraPos = tipoString.lastIndexOf(")");
             
             if (parentesisAbrePos == -1 || parentesisCierraPos == -1 || parentesisCierraPos < parentesisAbrePos) {
-                throw new ParseException("La sentencia se encuentra mal formada.");
+                throw new ParseException("Parser DDL: SQL string not recognized.");
             }
             String tipo = tipoString.substring(0, parentesisAbrePos);
             int length = 0;
@@ -166,7 +166,7 @@ class DDLParser implements Parser {
                 length = Integer.parseInt(tipoString.substring(parentesisAbrePos+1, parentesisCierraPos).trim());
             }
             catch (NumberFormatException e) {
-                throw new ParseException("La sentencia se encuentra mal formada.");
+                throw new ParseException("Parser DDL: SQL string not recognized.");
             }
             //luego hacer q funke estas lineas
             Tipo tipoDato = null ;//=  new Tipo;
@@ -175,7 +175,7 @@ class DDLParser implements Parser {
             {
                  tipoDato = Tipo.dameTipo(String.class);
                  
-            } else if ( tipo.toUpperCase().trim().equalsIgnoreCase("NUMERIC"))
+            } else if ( tipo.toUpperCase().trim().equalsIgnoreCase("INTEGER"))
             {
                  tipoDato = Tipo.dameTipo(Integer.class);
                 
@@ -199,22 +199,22 @@ class DDLParser implements Parser {
                             constraint.add("NOT_NULL");
                         }
                         else {
-                            throw new ParseException("La sentencia se encuentra mal formada.");
+                            throw new ParseException("Parser DDL: SQL string not recognized.");
                         }
                     }
                     else {
-                        throw new ParseException("La sentencia se encuentra mal formada.");
+                        throw new ParseException("Parser DDL: SQL string not recognized.");
                     }
                 }
                 else {
                     // Si no es un NOT, entonces si es distinto de NULL, hay un error sintactico
                     if (!c.equalsIgnoreCase("NULL")) {
-                        throw new ParseException("La sentencia se encuentra mal formada.");
+                        throw new ParseException("Parser DDL: SQL string not recognized.");
                     }
                     else {
                         // Si es igual a NULL y el campo era PK, entonces hay un Error
                         if (isPK) {
-                            throw new RuntimeException("Las claves primarias no se encuentran soportadas.");
+                            throw new RuntimeException("Parser DDL: Primary keys not supported.");
                         }
                     }
                 }
@@ -238,7 +238,7 @@ class DDLParser implements Parser {
             }
         }
         catch (NoSuchElementException e) {
-            throw new ParseException("La sentencia se encuentra mal formada.", e);
+            throw new ParseException("Parser DDL: SQL string not recognized.", e);
         }
         return ret;
     }

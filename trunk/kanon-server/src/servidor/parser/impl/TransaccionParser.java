@@ -32,13 +32,13 @@ class TransaccionParser implements Parser {
     public static ZStatement parseBeginTransacctionStatement(String sentencia) throws ParseException, TokenMgrError {
     	int endOfStatementChar = sentencia.toLowerCase().indexOf(";");
     	if (endOfStatementChar == -1) {
-    		throw new ParseException("Parser TXL: Cadena no reconocida");
+    		throw new ParseException("Parser TXL: SQL string not recognized");
     	}
     	sentencia = sentencia.substring(0, endOfStatementChar).trim();
     	
         //me fijo que esten las palabras clave
     	if (!sentencia.equalsIgnoreCase("begin transaction")) {
-    		throw new ParseException("Parser TXL: Cadena no reconocida");
+    		throw new ParseException("Parser TXL: SQL string not recognized");
     	}
     	
         ZTransactStmt st = new ZTransactStmt("BEGIN");
@@ -51,15 +51,15 @@ class TransaccionParser implements Parser {
     public static ZStatement parseSavepointStatement(String sentencia) throws ParseException, TokenMgrError {
     	int endOfStatementChar = sentencia.toLowerCase().indexOf(";");
     	if (endOfStatementChar == -1) {
-    		throw new ParseException("Parser TXL: Cadena no reconocida");
+    		throw new ParseException("Parser TXL: SQL string not recognized");
     	}
     	sentencia = sentencia.substring(0, endOfStatementChar).trim();
     	String[] partesDeSentencia = sentencia.split(" ");
     	if (!partesDeSentencia[0].toLowerCase().equals("savepoint")) {
-    		throw new ParseException("Parser TXL: Cadena no reconocida");
+    		throw new ParseException("Parser TXL: SQL string not recognized");
     	}
     	if (partesDeSentencia.length > 2) {
-    		throw new ParseException("Parser TXL: Cadena no reconocida");
+    		throw new ParseException("Parser TXL: SQL string not recognized");
     	}
     	String savepoint = partesDeSentencia[1]; 
     	
@@ -73,16 +73,16 @@ class TransaccionParser implements Parser {
     public static ZStatement parseIsolationStatement(String sentencia) throws ParseException, TokenMgrError {
     	int endOfStatementChar = sentencia.toLowerCase().indexOf(";");
     	if (endOfStatementChar == -1) {
-    		throw new ParseException("Parser TXL: Cadena no reconocida");
+    		throw new ParseException("Parser TXL: SQL string not recognized");
     	}
     	sentencia = sentencia.substring(0, endOfStatementChar).trim();
     	
     	String[] partesDeSentencia = sentencia.split(" ");
     	if (!partesDeSentencia[0].toLowerCase().equals("isolation")) {
-    		throw new ParseException("Parser TXL: Cadena no reconocida");
+    		throw new ParseException("Parser TXL: SQL string not recognized");
     	}
     	if (partesDeSentencia.length > 2) {
-    		throw new ParseException("Parser TXL: Cadena no reconocida");
+    		throw new ParseException("Parser TXL: SQL string not recognized");
     	}
     	
     	String aislamiento = partesDeSentencia[1]; 
@@ -106,13 +106,13 @@ class TransaccionParser implements Parser {
     public static ZStatement parseCommitTransacctionStatement(String sentencia) throws ParseException, TokenMgrError {
     	int endOfStatementChar = sentencia.toLowerCase().indexOf(";");
     	if (endOfStatementChar == -1) {
-    		throw new ParseException("Parser TXL: Cadena no reconocida");
+    		throw new ParseException("Parser TXL: SQL string not recognized");
     	}
     	sentencia = sentencia.substring(0, endOfStatementChar).trim();
     	
         //me fijo que esten las palabras clave
     	if (!sentencia.equalsIgnoreCase("commit transaction")) {
-    		throw new ParseException("Parser TXL: Cadena no reconocida");
+    		throw new ParseException("Parser TXL: SQL string not recognized");
     	}
     	
     	ZTransactStmt st = new ZTransactStmt("COMMIT");
@@ -133,16 +133,16 @@ class TransaccionParser implements Parser {
     public static ZStatement parseAbortTransacctionStatement(String sentencia) throws ParseException, TokenMgrError {
     	int endOfStatementChar = sentencia.toLowerCase().indexOf(";");
     	if (endOfStatementChar == -1) {
-    		throw new ParseException("Parser TXL: Cadena no reconocida");
+    		throw new ParseException("Parser TXL: SQL string not recognized");
     	}
     	sentencia = sentencia.substring(0, endOfStatementChar).trim();
     	
     	String[] partesDeSentencia = sentencia.split(" ");
     	if (!partesDeSentencia[0].toLowerCase().equals("rollback")) {
-    		throw new ParseException("Parser TXL: Cadena no reconocida");
+    		throw new ParseException("Parser TXL: SQL string not recognized");
     	}
     	if (partesDeSentencia.length > 2) {
-    		throw new ParseException("Parser TXL: Cadena no reconocida");
+    		throw new ParseException("Parser TXL: SQL string not recognized");
     	}
     	String savepoint = partesDeSentencia[1]; 
     	

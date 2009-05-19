@@ -33,9 +33,9 @@ public class XSystemStatement implements XStatement {
 			resultado.setMensaje("");
 		} else if (this.comando.equals("CHECKPOINT")) {
 			FabricaRecoveryManager.dameInstancia().checkpoint();
-			resultado.setMensaje("Checkpoint realizado correctamente.");
+			resultado.setMensaje("Checkpoint successful.");
         } else {
-            throw new RuntimeException("Comando de sistema no reconocido: " + this.comando);
+            throw new RuntimeException("Command not recognized: " + this.comando);
 		}
 		return resultado;
 	}

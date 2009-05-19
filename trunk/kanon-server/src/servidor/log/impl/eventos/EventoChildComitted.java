@@ -79,7 +79,7 @@ public class EventoChildComitted extends EventoTransaccion {
 
 	@Override
 	public String toString() {
-		return super.toString() + "|TXHija:" + this.idTransaccionHija + "|LastLSN:" + this.lastLSNHija;
+		return super.toString() + "|TXChild:" + this.idTransaccionHija + "|LastLSN:" + this.lastLSNHija;
 	}
 
 }

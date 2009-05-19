@@ -19,7 +19,7 @@ public final class DeByteArray_Conversor extends Conversor {
     @Override
     public Object convertir(Campo campo, Object valor) {
         switch (campo.tipo()) {
-            case NUMERIC:
+            case INTEGER:
 	            {
 	        		byte[] bs = ByteHelper.trimIniciales((byte[])valor);
 					return new BigInteger(bs).intValue(); // BigIntener hace el trabajo por nosotros

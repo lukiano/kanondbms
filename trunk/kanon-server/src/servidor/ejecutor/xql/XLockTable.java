@@ -22,7 +22,7 @@ public class XLockTable implements XStatement {
 	 * @see servidor.ejecutor.xql.XStatement#execute()
 	 */
 	public Resultado execute() {
-        throw new RuntimeException("Procedimiento no implementado.");
+        throw new RuntimeException("Not implemented.");
 	}
 
     /**

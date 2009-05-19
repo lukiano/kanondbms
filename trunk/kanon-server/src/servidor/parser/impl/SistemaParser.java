@@ -30,14 +30,14 @@ class SistemaParser implements Parser {
     public static ZStatement parseCheckpointStatement(String sentencia) throws ParseException, TokenMgrError {
     	int endOfStatementChar = sentencia.toLowerCase().indexOf(";");
     	if (endOfStatementChar == -1) {
-    		throw new ParseException("Parser SYS: Cadena no reconocida");
+    		throw new ParseException("Parser SYS: SQL string not recognized");
     	}
     	sentencia = sentencia.substring(0, endOfStatementChar).trim();
     	
     	if (sentencia.equalsIgnoreCase("checkpoint")) {
     		return new ZSystemStatement("CHECKPOINT");
     	} else {
-    		throw new ParseException("Parser SYS: Cadena no reconocida");
+    		throw new ParseException("Parser SYS: SQL string not recognized");
     	}
     }
 
@@ -52,13 +52,13 @@ class SistemaParser implements Parser {
     public static ZStatement parseCrashStatement(String sentencia) throws ParseException, TokenMgrError {
     	int endOfStatementChar = sentencia.toLowerCase().indexOf(";");
     	if (endOfStatementChar == -1) {
-    		throw new ParseException("Parser SYS: Cadena no reconocida");
+    		throw new ParseException("Parser SYS: SQL string not recognized");
     	}
     	sentencia = sentencia.substring(0, endOfStatementChar).trim();
     	if (sentencia.equalsIgnoreCase("crash")) {
     		return new ZSystemStatement("CRASH");
     	} else {
-    		throw new ParseException("Parser SYS: Cadena no reconocida");
+    		throw new ParseException("Parser SYS: SQL string not recognized");
     	}
     }
 

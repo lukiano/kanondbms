@@ -19,7 +19,7 @@ class CampoHelper {
 	/**
 	 * Constance con un campo que contenga el tipo de datos numerico.
 	 */
-	private static final Campo CAMPO_NUMERIC = new CampoImpl(Tipo.NUMERIC, Catalogo.LONGITUD_INT);
+	private static final Campo CAMPO_NUMERIC = new CampoImpl(Tipo.INTEGER, Catalogo.LONGITUD_INT);
 	
 	/**
 	 * Devuelve un campo apropiado segun la constante ZQL.

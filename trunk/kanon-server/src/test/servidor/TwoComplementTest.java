@@ -14,7 +14,7 @@ public class TwoComplementTest {
 	 */
 	public static void main(String[] args) {
 		Conversor conversor = Conversor.conversorABytes();
-		Campo campo = new CampoImpl(Tipo.NUMERIC, 4);
+		Campo campo = new CampoImpl(Tipo.INTEGER, 4);
 		byte[] bs = (byte[]) conversor.convertir(campo, new Integer(1231236));
 		System.out.print(new String(bs));
 		System.out.println("as");

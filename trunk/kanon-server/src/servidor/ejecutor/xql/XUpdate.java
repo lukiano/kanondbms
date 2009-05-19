@@ -109,12 +109,12 @@ public class XUpdate implements XStatement {
                     campo = CampoHelper.dameCampo(constant);
                     nuevoValor = constant.getValue();
                 } else {
-                	throw new RuntimeException("La expresion no esta soportada: " + exp);
+                	throw new RuntimeException("Expression not supported: " + exp);
                 }
                 Columna columnaCorrespondiente = columnas[entrada.numeroColumna];
                 if (!CampoHelper.camposDelMismoTipo(campo, columnaCorrespondiente.campo())) {
-                	throw new RuntimeException("Se quiere insertar un elemento del tipo " + campo.toString()
-                			+ " en la columna " + columnaCorrespondiente.nombre());
+                	throw new RuntimeException("Unable to insert an element of type " + campo.toString()
+                			+ " in column " + columnaCorrespondiente.nombre());
                 }
                 valores.add(
                 		Valor.nuevoValor(entrada.numeroColumna, 
@@ -163,7 +163,7 @@ public class XUpdate implements XStatement {
     public Resultado execute() {
         Tabla tabla = FabricaCatalogo.dameInstancia().dameTabla(this.nombreTabla);
         if (tabla == null) {
-            throw new RuntimeException("La tabla especificada no existe en el catalogo: " + this.nombreTabla);
+        	throw new RuntimeException("No table exists with name '" + this.nombreTabla + "'.");
         }
         this.chequeoColumnas(tabla);
         
@@ -181,8 +181,8 @@ public class XUpdate implements XStatement {
         this.iteradorConsulta.ejecutarParaCadaCoincidencia(tabla, this.where, comando);
         
         Resultado resultado = new Resultado();
-        resultado.setMensaje("Actualizacion exitosa de " + comando.cantidad() + " registros " +  
-                "en la tabla " + this.nombreTabla);
+        resultado.setMensaje("Successful update of " + comando.cantidad() + " records " +  
+                "in table " + this.nombreTabla);
         return resultado;
     }
 
@@ -202,7 +202,7 @@ public class XUpdate implements XStatement {
                 }
             }
             if (!columnaEncontrada) {
-            	throw new RuntimeException("La columna '" + cae.nombreColumna + "' no existe en la tabla '" + tabla.id().nombre() + "'.");
+            	throw new RuntimeException("Column '" + cae.nombreColumna + "' not found in table '" + tabla.id().nombre() + "'.");
             }
         }
 	}
