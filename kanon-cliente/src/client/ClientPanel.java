@@ -46,7 +46,7 @@ public class ClientPanel extends javax.swing.JPanel {
 
 	private JButton deleteButton;
 
-	private JScrollPane jScrollPane2;
+	private JScrollPane jQueryEditorScrollPane;
 
 	private JEditorPane queryEditorPane;
 
@@ -54,9 +54,9 @@ public class ClientPanel extends javax.swing.JPanel {
 
 	private JButton sendQueryButton;
 
-	private JLabel jLabel3;
+	private JLabel jQueryEditorLabel;
 
-	private JLabel jLabel1;
+	private JLabel jResultLabel;
 
 	private JScrollPane ResultPanel;
 
@@ -145,26 +145,26 @@ public class ClientPanel extends javax.swing.JPanel {
 			UnsupportedLookAndFeelException {
 		// UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		try {
-			this.setPreferredSize(new java.awt.Dimension(581, 549));
+			this.setPreferredSize(new java.awt.Dimension(481, 432));
 			this.setLayout(null);
 			this.setOpaque(false);
 			{
-				jLabel1 = new JLabel();
-				this.add(jLabel1);
-				jLabel1.setText("Result");
-				jLabel1.setBounds(14, 169, 164, 17);
+				jResultLabel = new JLabel();
+				this.add(jResultLabel);
+				jResultLabel.setText("Result");
+				jResultLabel.setBounds(14, 169, 164, 17);
 			}
 			{
-				jLabel3 = new JLabel();
-				this.add(jLabel3);
-				jLabel3.setText("Query editor");
-				jLabel3.setBounds(11, 16, 127, 19);
+				jQueryEditorLabel = new JLabel();
+				this.add(jQueryEditorLabel);
+				jQueryEditorLabel.setText("Query editor");
+				jQueryEditorLabel.setBounds(11, 16, 127, 19);
 			}
 			{
 				sendQueryButton = new JButton();
 				this.add(getEnviarConsultaButton());
 				sendQueryButton.setText("Send query");
-				sendQueryButton.setBounds(360, 34, 168, 28);
+				sendQueryButton.setBounds(260, 34, 110, 28);
 				sendQueryButton.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
 
@@ -183,7 +183,7 @@ public class ClientPanel extends javax.swing.JPanel {
 				loadQueryFileButton = new JButton();
 				this.add(getLoadQueryFileButton());
 				loadQueryFileButton.setText("Load file");
-				loadQueryFileButton.setBounds(360, 69, 168, 28);
+				loadQueryFileButton.setBounds(260, 69, 110, 28);
 				loadQueryFileButton.setEnabled(false);
 				loadQueryFileButton
 						.addActionListener(new ActionListener() {
@@ -193,20 +193,22 @@ public class ClientPanel extends javax.swing.JPanel {
 						});
 			}
 			{
-				jScrollPane2 = new JScrollPane();
-				this.add(jScrollPane2);
-				jScrollPane2.setBounds(14, 42, 315, 119);
+				jQueryEditorScrollPane = new JScrollPane();
+				this.add(jQueryEditorScrollPane);
+				jQueryEditorScrollPane.setBounds(14, 42, 215, 120);
+				jQueryEditorScrollPane.setPreferredSize(new java.awt.Dimension(215,
+						120));
 				{
 					// EditorConsulta = new JTextArea();
 					queryEditorPane = new JEditorPane();
 					queryEditorPane.setText("");
-					jScrollPane2.setViewportView(queryEditorPane);
-					queryEditorPane.setBounds(518, 126, 511, 119);
+					jQueryEditorScrollPane.setViewportView(queryEditorPane);
+//					queryEditorPane.setBounds(518, 126, 311, 119);
 					queryEditorPane.setAutoscrolls(false);
 					queryEditorPane.setBorder(BorderFactory
 							.createBevelBorder(BevelBorder.LOWERED));
-					queryEditorPane.setPreferredSize(new java.awt.Dimension(315,
-							385));
+					queryEditorPane.setPreferredSize(new java.awt.Dimension(215,
+							120));
 					queryEditorPane.setOpaque(false);
 
 					try {
@@ -232,7 +234,7 @@ public class ClientPanel extends javax.swing.JPanel {
 				this.add(getResultPanel());
 				this.add(getClearOutputButton());
 				deleteButton.setText("Clear query");
-				deleteButton.setBounds(360, 104, 168, 28);
+				deleteButton.setBounds(260, 104, 110, 28);
 				deleteButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
 
@@ -344,8 +346,11 @@ public class ClientPanel extends javax.swing.JPanel {
 			do {
 
 				try {
-					stringBuilder.append(this.bufferedReader.readLine());
-					stringBuilder.append('\n');
+					String result = this.bufferedReader.readLine();
+					if (result != null) {
+						stringBuilder.append(result);
+						stringBuilder.append('\n');
+					}
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -371,7 +376,7 @@ public class ClientPanel extends javax.swing.JPanel {
 	public JScrollPane getResultPanel() {
 		if (ResultPanel == null) {
 			ResultPanel = new JScrollPane();
-			ResultPanel.setBounds(16, 196, 536, 283);
+			ResultPanel.setBounds(16, 196, 336, 183);
 			ResultPanel.getVerticalScrollBar().setAutoscrolls(true);
 			ResultPanel.setViewportView(getJTextResult());
 		}
@@ -392,8 +397,8 @@ public class ClientPanel extends javax.swing.JPanel {
 	private JButton getClearOutputButton() {
 		if (clearOutputButton == null) {
 			clearOutputButton = new JButton();
-			clearOutputButton.setText("Clear output area");
-			clearOutputButton.setBounds(361, 139, 168, 28);
+			clearOutputButton.setText("Clear output");
+			clearOutputButton.setBounds(260, 139, 110, 28);
 			clearOutputButton.setEnabled(false);
 			clearOutputButton.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {

@@ -21,6 +21,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
+import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
@@ -48,9 +49,9 @@ public class ClientFrame extends javax.swing.JFrame {
 
 	private JButton executeAllClientsButton;
 
-	private JPanel jPanel1;
+	private JPanel jLogPanel;
 
-	private JPanel jLogLock;
+	private JPanel jBothPanel;
 
 	private JTable logTable;
 
@@ -60,11 +61,11 @@ public class ClientFrame extends javax.swing.JFrame {
 
 	private JScrollPane jLockScrollPanel;
 
-	private JLabel jLabel2;
+	private JLabel jLogLabel;
 
-	private JLabel jLabel1;
+	private JLabel jLocksLabel;
 
-	private JPanel jPanel2;
+	private JPanel jLockPanel;
 
 	// connection variables
 	public Socket clientSocket; // connection to the server
@@ -138,7 +139,7 @@ public class ClientFrame extends javax.swing.JFrame {
 			{
 				clientsTabbedPane = new JTabbedPane();
 				this.getContentPane().add(getClientsTabbedPane());
-				clientsTabbedPane.setBounds(14, 126, 581, 532);
+				clientsTabbedPane.setBounds(14, 126, 381, 432);
 			}
 			{
 				addClientButton = new JButton();
@@ -230,33 +231,30 @@ public class ClientFrame extends javax.swing.JFrame {
 				});
 			}
 			{
-				jLogLock = new JPanel();
-				BoxLayout jLogLockLayout = new BoxLayout(jLogLock,
+				jBothPanel = new JPanel();
+				BoxLayout jLogLockLayout = new BoxLayout(jBothPanel,
 						javax.swing.BoxLayout.Y_AXIS);
-				jLogLock.setLayout(jLogLockLayout);
-				getContentPane().add(jLogLock);
-				jLogLock.setBounds(602, 7, 406, 651);
-				jLogLock.setRequestFocusEnabled(false);
+				jBothPanel.setLayout(jLogLockLayout);
+				getContentPane().add(jBothPanel);
+				jBothPanel.setBounds(402, 7, 376, 551);
+				jBothPanel.setRequestFocusEnabled(false);
 				{
-					jPanel2 = new JPanel();
-					FlowLayout jPanel2Layout = new FlowLayout();
-					jLogLock.add(jPanel2);
-					jPanel2.setLayout(jPanel2Layout);
-					jPanel2.setPreferredSize(new java.awt.Dimension(406, 330));
+					jLockPanel = new JPanel();
+					jBothPanel.add(jLockPanel);
+					jLockPanel.setLayout(new BoxLayout(jLockPanel,
+							javax.swing.BoxLayout.Y_AXIS));
+//					jLockPanel.setPreferredSize(new java.awt.Dimension(406, 230));
 					{
-						jLabel1 = new JLabel();
-						jPanel2.add(jLabel1);
-						jLabel1.setText("   Locks");
-						jLabel1
-								.setPreferredSize(new java.awt.Dimension(416,
-										14));
+						jLocksLabel = new JLabel();
+						jLockPanel.add(jLocksLabel);
+						jLocksLabel.setHorizontalAlignment(SwingConstants.LEFT);
+						jLocksLabel.setText("Locks");
+//						jLocksLabel.setPreferredSize(new java.awt.Dimension(416, 14));
 					}
 					{
 						jLockScrollPanel = new JScrollPane();
-						jPanel2.add(jLockScrollPanel);
-						jLockScrollPanel
-								.setPreferredSize(new java.awt.Dimension(367,
-										303));
+						jLockPanel.add(jLockScrollPanel);
+//						jLockScrollPanel.setPreferredSize(new java.awt.Dimension(367, 203));
 						jLockScrollPanel.setOpaque(false);
 						{
 							TableModel jTable1Model = new LockTableModel(
@@ -278,20 +276,22 @@ public class ClientFrame extends javax.swing.JFrame {
 					}
 				}
 				{
-					jPanel1 = new JPanel();
-					jLogLock.add(jPanel1);
-					jPanel1.setLayout(null);
-					jPanel1.setPreferredSize(new java.awt.Dimension(406, 315));
+					jLogPanel = new JPanel();
+					jBothPanel.add(jLogPanel);
+					jLogPanel.setLayout(new BoxLayout(jLogPanel,
+							javax.swing.BoxLayout.Y_AXIS));
+//					jLogPanel.setPreferredSize(new java.awt.Dimension(406, 315));
 					{
-						jLabel2 = new JLabel();
-						jPanel1.add(jLabel2);
-						jLabel2.setText("Log");
-						jLabel2.setBounds(21, 7, 63, 21);
+						jLogLabel = new JLabel();
+						jLogPanel.add(jLogLabel);
+						jLogLabel.setHorizontalAlignment(SwingConstants.LEFT);
+						jLogLabel.setText("Log");
+//						jLogLabel.setBounds(21, 7, 63, 21);
 					}
 					{
 						jLogScrollPane = new JScrollPane();
-						jPanel1.add(jLogScrollPane);
-						jLogScrollPane.setBounds(14, 28, 385, 280);
+						jLogPanel.add(jLogScrollPane);
+//						jLogScrollPane.setBounds(14, 28, 385, 290);
 						{
 							TableModel logTableModel = new LogTableModel(
 									this.serverAddress);
@@ -312,7 +312,7 @@ public class ClientFrame extends javax.swing.JFrame {
 				}
 			}
 			pack();
-			this.setSize(1024, 700);
+			this.setSize(790, 590);
 			this.setResizable(false);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -324,7 +324,7 @@ public class ClientFrame extends javax.swing.JFrame {
 		// comments by Julian
 		// set a new connection and pass it to the panel
 		try {
-			Socket cliSocket = new Socket(this.serverAddress, 4444);
+			Socket cliSocket = new Socket(this.serverAddress, 34444);
 			try {
 				getClientsTabbedPane().addTab("Client " + (clientCounter + 1),
 						new ClientPanel(cliSocket));

@@ -45,8 +45,10 @@ public class LockTableModel extends AbstractTableModel {
 						String[] data = (String[])LockTableModel.this.objectInputStream.readObject();
 						LockTableModel.this.rows.add(data);
 					} catch (IOException e) {
+						closeCurrentConnection();
 						connect();
 					} catch (ClassNotFoundException e) {
+						closeCurrentConnection();
 						connect();
 					}
 					while (LockTableModel.this.rows.size() > MAX_ROWS) {
@@ -58,6 +60,21 @@ public class LockTableModel extends AbstractTableModel {
 		};
 		Thread thread = new Thread(runnable, "LockThread");
 		thread.start();
+	}
+
+	private void closeCurrentConnection() {
+		try {
+			if (this.objectInputStream != null) {
+				this.objectInputStream.close();
+			}
+			if (this.socket != null) {
+				this.socket.close();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			notConnected=true;
+		}
 	}
 
 	public void connect() {
