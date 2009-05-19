@@ -71,6 +71,8 @@ public class LogTableModel extends AbstractTableModel {
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
+		} finally {
+			notConnected=true;
 		}
 	}
 
